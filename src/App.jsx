@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { CssBaseline, Box, Container, Typography, Button } from '@mui/material';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import Header from './components/Header';
@@ -7,7 +7,18 @@ import HeroBanner from './components/HeroBanner';
 import Footer from './components/Footer';
 import ProductPage from './pages/ProductPage';
 import AuthPage from './pages/AuthPage';
+import AdminPage from './pages/AdminPage';
 import './App.css';
+
+// Component kiểm tra quyền truy cập Admin
+const ProtectedAdminRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || user.role !== 'admin') {
+    alert('Bạn không có quyền truy cập vào trang Quản trị!');
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 const HomePage = () => {
   const [timeLeft, setTimeLeft] = useState({ hours: 12, minutes: 45, seconds: 30 });
@@ -172,11 +183,22 @@ const MainLayout = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductPage />} />
         <Route path="/login" element={<AuthPage />} />
+
+        {/* Route Admin được bảo vệ */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedAdminRoute>
+              <AdminPage />
+            </ProtectedAdminRoute>
+          }
+        />
       </Routes>
       {!isAuthPage && <Footer />}
     </>
   );
 };
+
 
 function App() {
   return (

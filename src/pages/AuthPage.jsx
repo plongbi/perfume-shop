@@ -1,309 +1,443 @@
-import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Tabs, Tab, Paper, Fade } from '@mui/material';
-import { Link } from 'react-router-dom';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Drawer,
+  AppBar,
+  Toolbar,
+  List,
+  Typography,
+  Divider,
+  IconButton,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Grid,
+  Paper,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  Chip,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress
+} from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PeopleIcon from '@mui/icons-material/People';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import EditIcon from '@mui/icons-material/Edit';
+import LogoutIcon from '@mui/icons-material/Logout';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useNavigate } from 'react-router-dom';
 
-const AuthPage = () => {
-  const [tabIndex, setTabIndex] = useState(0);
+const drawerWidth = 260;
 
-  const handleTabChange = (event, newValue) => {
-    setTabIndex(newValue);
+const AdminPage = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // State Dialog thêm sản phẩm
+  const [openDialog, setOpenDialog] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: 'Eau de Parfum',
+    price: '',
+    rating: 5,
+    image: '',
+    description: ''
+  });
+
+  const currentUser = JSON.parse(localStorage.getItem('user')) || {
+    name: 'Admin',
+    email: 'admin@gmail.com',
+    role: 'admin'
   };
 
-  const authConfig = [
-    {
-      image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80',
-      quote: '“Hương thơm là bản tuyên ngôn không lời của phong cách và đẳng cấp.”',
-      subQuote: 'ESSENCE PERFUME HOUSE',
-      reverse: false
-    },
-    {
-      image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=1200&q=80',
-      quote: '“Khởi đầu hành trình khám phá những nốt hương độc bản.”',
-      subQuote: 'ĐẶC QUYỀN THÀNH VIÊN',
-      reverse: true
+  // Tải danh sách sản phẩm từ Backend
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/products');
+      if (!res.ok) throw new Error('Không thể lấy danh sách sản phẩm');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setProducts(data);
+      } else {
+        setProducts([]);
+      }
+    } catch (err) {
+      console.error('Lỗi lấy danh sách sản phẩm:', err);
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const currentConfig = authConfig[tabIndex];
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Xử lý thêm sản phẩm
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:5000/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProduct)
+      });
+      if (res.ok) {
+        setOpenDialog(false);
+        setNewProduct({ name: '', category: 'Eau de Parfum', price: '', rating: 5, image: '', description: '' });
+        fetchProducts();
+      }
+    } catch (err) {
+      console.error('Lỗi thêm sản phẩm:', err);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
+  // Render Nội dung chính tùy theo Tab được chọn
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', mb: 1, color: '#1a1a1a' }}>
+              Dashboard
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#777', mb: 4 }}>
+              Tổng quan chỉ số hoạt động của cửa hàng nước hoa ESSENCE
+            </Typography>
+
+            <Grid container spacing={3} sx={{ mb: 5 }}>
+              <Grid item xs={12} sm={4}>
+                <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff' }}>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>Users Volume</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, my: 1.5 }}>8</Typography>
+                  <Button size="small" onClick={() => setActiveTab('users')} endIcon={<ArrowForwardIcon fontSize="small" />} sx={{ color: '#fff', p: 0, textTransform: 'none' }}>View Details</Button>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)', color: '#fff' }}>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>Products Volume</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, my: 1.5 }}>{products.length}</Typography>
+                  <Button size="small" onClick={() => setActiveTab('products')} endIcon={<ArrowForwardIcon fontSize="small" />} sx={{ color: '#fff', p: 0, textTransform: 'none' }}>View Details</Button>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff' }}>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>Orders Volume</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, my: 1.5 }}>25</Typography>
+                  <Button size="small" onClick={() => setActiveTab('orders')} endIcon={<ArrowForwardIcon fontSize="small" />} sx={{ color: '#fff', p: 0, textTransform: 'none' }}>View Details</Button>
+                </Paper>
+              </Grid>
+            </Grid>
+
+            {/* Bảng Danh sách Sản phẩm xem nhanh */}
+            <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid #eaeaea' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: '"Playfair Display", serif' }}>
+                  Sản phẩm mới cập nhật
+                </Typography>
+                <Button variant="outlined" size="small" onClick={() => setActiveTab('products')} sx={{ textTransform: 'none', borderColor: '#1a1a1a', color: '#1a1a1a' }}>
+                  Xem tất cả
+                </Button>
+              </Box>
+              <TableContainer>
+                <Table>
+                  <TableHead sx={{ backgroundColor: '#fafafa' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Sản phẩm</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Loại</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Giá bán</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Đánh giá</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(Array.isArray(products) ? products : []).slice(0, 5).map((row) => (
+                      <TableRow key={row._id || Math.random()} hover>
+                        <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Avatar src={row.image} variant="rounded" sx={{ width: 40, height: 40 }} />
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.name}</Typography>
+                        </TableCell>
+                        <TableCell><Chip label={row.category || 'N/A'} size="small" sx={{ backgroundColor: '#f0f0f0', fontSize: '0.75rem' }} /></TableCell>
+                        <TableCell sx={{ color: '#d4af37', fontWeight: 600 }}>{row.price}</TableCell>
+                        <TableCell>{row.rating || 5} ⭐</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Box>
+        );
+
+      case 'products':
+        return (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
+                  Quản Lý Sản Phẩm
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#777' }}>
+                  Danh sách nước hoa trong cơ sở dữ liệu MongoDB
+                </Typography>
+              </Box>
+
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setOpenDialog(true)}
+                sx={{ backgroundColor: '#1a1a1a', color: '#fff', borderRadius: '8px', px: 3, textTransform: 'none', '&:hover': { backgroundColor: '#b89735' } }}
+              >
+                Thêm sản phẩm mới
+              </Button>
+            </Box>
+
+            <Paper elevation={0} sx={{ borderRadius: '16px', border: '1px solid #eaeaea', overflow: 'hidden' }}>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                  <CircularProgress sx={{ color: '#b89735' }} />
+                </Box>
+              ) : (
+                <TableContainer>
+                  <Table>
+                    <TableHead sx={{ backgroundColor: '#1a1a1a' }}>
+                      <TableRow>
+                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Hình ảnh</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Tên nước hoa</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Phân loại</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Giá</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 600 }} align="right">Hành động</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {Array.isArray(products) && products.length > 0 ? (
+                        products.map((p) => (
+                          <TableRow key={p._id || Math.random()} hover>
+                            <TableCell>
+                              <Avatar src={p.image} variant="rounded" sx={{ width: 48, height: 48 }} />
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>{p.name}</TableCell>
+                            <TableCell>{p.category}</TableCell>
+                            <TableCell sx={{ color: '#d4af37', fontWeight: 700 }}>{p.price}</TableCell>
+                            <TableCell align="right">
+                              <IconButton size="small" sx={{ color: '#666' }}><EditIcon fontSize="small" /></IconButton>
+                              <IconButton size="small" sx={{ color: '#ef4444' }}><DeleteOutlineIcon fontSize="small" /></IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center" sx={{ py: 4, color: '#777' }}>
+                            Chưa có sản phẩm nào trong cơ sở dữ liệu. Hãy bấm "Thêm sản phẩm mới".
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Paper>
+          </Box>
+        );
+
+      case 'users':
+        return (
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', mb: 1 }}>
+              Quản Lý Người Dùng
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#777', mb: 4 }}>
+              Danh sách tài khoản khách hàng và quản trị viên
+            </Typography>
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: '16px', border: '1px solid #eaeaea' }}>
+              <Typography color="textSecondary">Danh sách người dùng đang được đồng bộ...</Typography>
+            </Paper>
+          </Box>
+        );
+
+      case 'orders':
+        return (
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', mb: 1 }}>
+              Quản Lý Đơn Hàng
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#777', mb: 4 }}>
+              Theo dõi tình trạng đơn hàng từ khách mua
+            </Typography>
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: '16px', border: '1px solid #eaeaea' }}>
+              <Typography color="textSecondary">Hiện tại chưa có đơn hàng mới nào.</Typography>
+            </Paper>
+          </Box>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
-    <Box
-      sx={{
-        width: '100vw',
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f2f0eb',
-        position: 'relative',
-        p: 2
-      }}
-    >
-      {/* Nút quay lại trang chủ */}
-      <Button
-        component={Link}
-        to="/"
-        startIcon={<ArrowBackIcon />}
+    <Box sx={{ display: 'flex', backgroundColor: '#faf9f6', minHeight: '100vh' }}>
+      <AppBar
+        position="fixed"
         sx={{
-          position: 'absolute',
-          top: 24,
-          left: 24,
+          width: `calc(100% - ${drawerWidth}px)`,
+          ml: `${drawerWidth}px`,
+          backgroundColor: '#ffffff',
           color: '#1a1a1a',
-          textTransform: 'none',
-          fontWeight: 600,
-          backgroundColor: '#fff',
-          px: 2,
-          py: 0.8,
-          borderRadius: '20px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-          zIndex: 10,
-          '&:hover': { backgroundColor: '#faf9f6' }
+          boxShadow: 'none',
+          borderBottom: '1px solid #eaeaea'
         }}
       >
-        Trang chủ
-      </Button>
-
-      {/* Hộp Card tổng thể */}
-      <Paper
-        elevation={0}
-        sx={{
-          width: '100%',
-          maxWidth: '920px',
-          height: '580px',
-          display: 'flex',
-          flexDirection: { xs: 'column', md: currentConfig.reverse ? 'row-reverse' : 'row' },
-          borderRadius: '24px',
-          overflow: 'hidden',
-          boxShadow: '0 24px 48px rgba(0,0,0,0.08)',
-          border: '1px solid #eaeaea',
-          backgroundColor: '#fff',
-          transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-        }}
-      >
-        {/* 1. Phần Hình ảnh nghệ thuật kèm Typography cao cấp */}
-        <Box
-          sx={{
-            display: { xs: 'none', md: 'block' },
-            flex: 1.2,
-            position: 'relative',
-            backgroundImage: `url('${currentConfig.image}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            transition: 'background-image 0.6s ease-in-out'
-          }}
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.1) 100%)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              p: 6
-            }}
-          >
-            <Fade in={true} timeout={800} key={tabIndex}>
-              <Box>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color: '#ffffff',
-                    fontFamily: '"Playfair Display", serif',
-                    fontWeight: 600,
-                    fontStyle: 'italic',
-                    mb: 2,
-                    lineHeight: 1.4,
-                    letterSpacing: '0.5px',
-                    textShadow: '0 2px 10px rgba(0,0,0,0.3)'
-                  }}
-                >
-                  {currentConfig.quote}
-                </Typography>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    color: '#d4af37',
-                    fontWeight: 600,
-                    letterSpacing: '3px',
-                    fontSize: '0.75rem',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  {currentConfig.subQuote}
-                </Typography>
-              </Box>
-            </Fade>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            Hệ thống Quản trị ESSENCE
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Welcome, {currentUser.name}!
+            </Typography>
+            <Avatar sx={{ width: 32, height: 32, backgroundColor: '#d4af37', fontSize: '0.85rem' }}>
+              A
+            </Avatar>
           </Box>
-        </Box>
+        </Toolbar>
+      </AppBar>
 
-        {/* 2. Phần Form Nhập liệu */}
-        <Box
-          sx={{
-            flex: 1,
+      <Drawer
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            backgroundColor: '#111111',
+            color: '#ffffff',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            px: { xs: 4, md: 6 },
-            py: 4,
-            backgroundColor: '#ffffff'
-          }}
-        >
-          <Box sx={{ width: '100%', maxWidth: '360px' }}>
-            <Typography
-              variant="h6"
-              component={Link}
-              to="/"
-              sx={{
-                fontWeight: 800,
-                letterSpacing: '3px',
-                color: '#111',
-                textDecoration: 'none',
-                fontFamily: '"Playfair Display", serif',
-                display: 'block',
-                mb: 0.5,
-                textAlign: 'center'
-              }}
-            >
+            justifyContent: 'space-between'
+          },
+        }}
+        variant="permanent"
+        anchor="left"
+      >
+        <Box>
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '3px', fontFamily: '"Playfair Display", serif', color: '#fff' }}>
               ESSENCE<span style={{ color: '#d4af37' }}>.</span>
             </Typography>
-            <Typography variant="body2" sx={{ color: '#666', mb: 3, fontWeight: 300, textAlign: 'center', fontSize: '0.85rem' }}>
-              {tabIndex === 0 ? 'Đăng nhập để tiếp tục trải nghiệm mua sắm' : 'Đăng ký tài khoản để nhận đặc quyền riêng'}
+            <Typography variant="caption" sx={{ color: '#777', fontSize: '0.7rem', letterSpacing: '1px' }}>
+              ADMIN DASHBOARD
             </Typography>
-
-            <Tabs
-              value={tabIndex}
-              onChange={handleTabChange}
-              centered
-              sx={{
-                mb: 3,
-                borderBottom: '1px solid #eaeaea',
-                '& .MuiTabs-indicator': { backgroundColor: '#b89735', height: '2px' },
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.95rem',
-                  color: '#777',
-                  '&.Mui-selected': { color: '#1a1a1a' }
-                }
-              }}
-            >
-              <Tab label="Đăng Nhập" />
-              <Tab label="Đăng Ký" />
-            </Tabs>
-
-            <Fade in={true} timeout={500} key={tabIndex}>
-              <Box>
-                {tabIndex === 0 ? (
-                  <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <TextField
-                      label="Email của bạn"
-                      type="email"
-                      variant="outlined"
-                      fullWidth
-                      size="small"
-                      InputProps={{
-                        startAdornment: <EmailOutlinedIcon sx={{ color: '#888', mr: 1, fontSize: '18px' }} />,
-                      }}
-                      sx={{ '& .MuiOutlinedInput-root': { '&.Mui-focused fieldset': { borderColor: '#b89735' } } }}
-                    />
-                    <TextField
-                      label="Mật khẩu"
-                      type="password"
-                      variant="outlined"
-                      fullWidth
-                      size="small"
-                      InputProps={{
-                        startAdornment: <LockOutlinedIcon sx={{ color: '#888', mr: 1, fontSize: '18px' }} />,
-                      }}
-                      sx={{ '& .MuiOutlinedInput-root': { '&.Mui-focused fieldset': { borderColor: '#b89735' } } }}
-                    />
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      sx={{
-                        backgroundColor: '#1a1a1a',
-                        color: '#fff',
-                        py: 1,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        borderRadius: '6px',
-                        '&:hover': { backgroundColor: '#b89735' },
-                        mt: 1
-                      }}
-                    >
-                      Đăng Nhập
-                    </Button>
-                  </Box>
-                ) : (
-                  <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <TextField
-                      label="Họ và tên"
-                      variant="outlined"
-                      fullWidth
-                      size="small"
-                      InputProps={{
-                        startAdornment: <PersonOutlineOutlinedIcon sx={{ color: '#888', mr: 1, fontSize: '18px' }} />,
-                      }}
-                      sx={{ '& .MuiOutlinedInput-root': { '&.Mui-focused fieldset': { borderColor: '#b89735' } } }}
-                    />
-                    <TextField
-                      label="Email của bạn"
-                      type="email"
-                      variant="outlined"
-                      fullWidth
-                      size="small"
-                      InputProps={{
-                        startAdornment: <EmailOutlinedIcon sx={{ color: '#888', mr: 1, fontSize: '18px' }} />,
-                      }}
-                      sx={{ '& .MuiOutlinedInput-root': { '&.Mui-focused fieldset': { borderColor: '#b89735' } } }}
-                    />
-                    <TextField
-                      label="Mật khẩu"
-                      type="password"
-                      variant="outlined"
-                      fullWidth
-                      size="small"
-                      InputProps={{
-                        startAdornment: <LockOutlinedIcon sx={{ color: '#888', mr: 1, fontSize: '18px' }} />,
-                      }}
-                      sx={{ '& .MuiOutlinedInput-root': { '&.Mui-focused fieldset': { borderColor: '#b89735' } } }}
-                    />
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      sx={{
-                        backgroundColor: '#1a1a1a',
-                        color: '#fff',
-                        py: 1,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        borderRadius: '6px',
-                        '&:hover': { backgroundColor: '#b89735' },
-                        mt: 1
-                      }}
-                    >
-                      Đăng Ký Tài Khoản
-                    </Button>
-                  </Box>
-                )}
-              </Box>
-            </Fade>
           </Box>
+
+          <Divider sx={{ borderColor: '#222' }} />
+
+          <Typography variant="caption" sx={{ px: 3, pt: 2, pb: 1, display: 'block', color: '#555', fontWeight: 700 }}>
+            FEATURES
+          </Typography>
+
+          <List sx={{ px: 1.5 }}>
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                selected={activeTab === 'dashboard'}
+                onClick={() => setActiveTab('dashboard')}
+                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
+              >
+                <ListItemIcon sx={{ color: activeTab === 'dashboard' ? '#d4af37' : '#888', minWidth: 40 }}><DashboardIcon /></ListItemIcon>
+                <ListItemText primary="Dashboard" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                selected={activeTab === 'users'}
+                onClick={() => setActiveTab('users')}
+                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
+              >
+                <ListItemIcon sx={{ color: activeTab === 'users' ? '#d4af37' : '#888', minWidth: 40 }}><PeopleIcon /></ListItemIcon>
+                <ListItemText primary="User" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                selected={activeTab === 'products'}
+                onClick={() => setActiveTab('products')}
+                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
+              >
+                <ListItemIcon sx={{ color: activeTab === 'products' ? '#d4af37' : '#888', minWidth: 40 }}><InventoryIcon /></ListItemIcon>
+                <ListItemText primary="Product" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                selected={activeTab === 'orders'}
+                onClick={() => setActiveTab('orders')}
+                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
+              >
+                <ListItemIcon sx={{ color: activeTab === 'orders' ? '#d4af37' : '#888', minWidth: 40 }}><ShoppingBagIcon /></ListItemIcon>
+                <ListItemText primary="Order" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+          </List>
         </Box>
-      </Paper>
+
+        <Box sx={{ p: 2, borderTop: '1px solid #222', backgroundColor: '#0a0a0a' }}>
+          <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>Logged in as:</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: '#fff', mb: 1 }}>{currentUser.name}</Typography>
+          <Button size="small" startIcon={<LogoutIcon fontSize="small" />} onClick={handleLogout} sx={{ color: '#ef4444', textTransform: 'none', p: 0, fontSize: '0.8rem' }}>
+            Đăng xuất
+          </Button>
+        </Box>
+      </Drawer>
+
+      <Box component="main" sx={{ flexGrow: 1, p: 4, mt: 8 }}>
+        {renderContent()}
+      </Box>
+
+      {/* Dialog Thêm sản phẩm mới */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Thêm nước hoa mới</DialogTitle>
+        <Box component="form" onSubmit={handleAddProduct}>
+          <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField label="Tên sản phẩm" fullWidth required size="small" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} />
+            <TextField label="Phân loại (VD: Eau de Parfum)" fullWidth required size="small" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} />
+            <TextField label="Giá bán (VD: 4.200.000đ)" fullWidth required size="small" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} />
+            <TextField label="Đường dẫn ảnh (URL)" fullWidth required size="small" value={newProduct.image} onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })} />
+            <TextField label="Mô tả nốt hương" fullWidth multiline rows={3} size="small" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} />
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5 }}>
+            <Button onClick={() => setOpenDialog(false)} sx={{ color: '#666' }}>Hủy</Button>
+            <Button type="submit" variant="contained" sx={{ backgroundColor: '#1a1a1a', color: '#fff', '&:hover': { backgroundColor: '#b89735' } }}>Lưu sản phẩm</Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
     </Box>
   );
 };
 
-export default AuthPage;
+export default AdminPage;
