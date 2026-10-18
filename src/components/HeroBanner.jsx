@@ -1,84 +1,162 @@
 import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, Container } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { Link } from 'react-router-dom';
 import bannerImage from '../assets/images/lelabo.jpg';
 
 const HeroBanner = () => {
   return (
-    <Box
-      sx={{
-        backgroundImage: `url(${bannerImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        width: '100vw', // Tràn toàn bộ chiều rộng màn hình
-        marginLeft: 'calc(50% - 50vw)', // Mẹo CSS giúp box tràn viền tuyệt đối ngay cả khi nằm trong container khác
-        minHeight: 'calc(100vh - 120px)',
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      {/* Lớp phủ màu đen trong suốt */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.45)',
-          zIndex: 1,
-        }}
-      />
-
-      {/* Nội dung Banner căn giữa */}
-      <Box sx={{ position: 'relative', zIndex: 2, textAlign: 'center', px: 2, maxWidth: '800px' }}>
-        <Typography
-          variant="h3"
+    <Box sx={{ py: { xs: 3, md: 5 }, px: { xs: 2, sm: 3, md: 4 }, backgroundColor: '#fcfbf9' }}>
+      <Container maxWidth="xl" disableGutters>
+        <Box
           sx={{
-            color: 'white',
-            fontWeight: 'bold',
-            letterSpacing: '2px',
-            mb: 2,
-            textTransform: 'uppercase',
-            fontSize: { xs: '2rem', md: '3.5rem' }
+            position: 'relative',
+            width: '100%',
+            maxWidth: '1280px',
+            mx: 'auto',
+            minHeight: { xs: '480px', sm: '540px', md: '600px' },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: { xs: '20px', md: '32px' },
+            overflow: 'hidden',
+            backgroundImage: `url(${bannerImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 40%',
+            backgroundRepeat: 'no-repeat',
+            boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.12), 0 10px 20px -5px rgba(0, 0, 0, 0.04)',
+            border: '1px solid rgba(0, 0, 0, 0.06)'
           }}
         >
-          Khám Phá Hương Thơm Độc Bản
-        </Typography>
+          {/* Lớp gradient overlay tinh tế */}
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(180deg, rgba(15, 15, 15, 0.45) 0%, rgba(15, 15, 15, 0.72) 100%)',
+              zIndex: 1,
+            }}
+          />
 
-        <Typography
-          variant="h6"
-          sx={{
-            color: '#e0e0e0',
-            mb: 4,
-            fontWeight: 300,
-            fontSize: { xs: '0.9rem', md: '1.1rem' }
-          }}
-        >
-          OFFERING THE MOST TAILORED SOLUTIONS FOR OUR SHOPPERS.
-        </Typography>
+          <Box sx={{ position: 'relative', zIndex: 2, textAlign: 'center', px: { xs: 3, sm: 6 }, py: 6, maxWidth: '780px' }}>
+            <Typography
+              variant="overline"
+              sx={{
+                display: 'inline-block',
+                color: '#dfc285',
+                letterSpacing: '0.28em',
+                fontSize: { xs: '0.72rem', md: '0.82rem' },
+                fontWeight: 600,
+                mb: 1.5,
+                textTransform: 'uppercase',
+                borderBottom: '1px solid rgba(223, 194, 133, 0.35)',
+                pb: 0.4
+              }}
+            >
+              Haute Parfumerie & Artistry
+            </Typography>
 
-        <Button
-          variant="outlined"
-          sx={{
-            color: 'white',
-            borderColor: '#8bc34a',
-            borderWidth: '2px',
-            borderRadius: '25px',
-            padding: '10px 35px',
-            fontWeight: 'bold',
-            '&:hover': {
-              borderColor: '#7cb342',
-              backgroundColor: 'rgba(139, 195, 74, 0.2)',
-              borderWidth: '2px',
-            }
-          }}
-        >
-          VIEW DETAILS
-        </Button>
-      </Box>
+            <Typography
+              variant="h1"
+              sx={{
+                color: '#ffffff',
+                fontWeight: 600,
+                fontFamily: '"Playfair Display", serif',
+                letterSpacing: '-0.02em',
+                lineHeight: { xs: 1.2, md: 1.15 },
+                mb: 2.5,
+                fontSize: { xs: '2rem', sm: '2.8rem', md: '3.6rem' },
+                textShadow: '0 4px 20px rgba(0,0,0,0.5)'
+              }}
+            >
+              Khơi Dậy Nốt Hương <br />
+              <Box
+                component="span"
+                sx={{
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  background: 'linear-gradient(135deg, #ffffff 40%, #dfc285 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Độc Bản Của Riêng Bạn
+              </Box>
+            </Typography>
+
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.85)',
+                maxWidth: '520px',
+                mx: 'auto',
+                mb: 4,
+                fontWeight: 300,
+                fontSize: { xs: '0.9rem', md: '1rem' },
+                lineHeight: 1.7,
+                letterSpacing: '0.01em'
+              }}
+            >
+              Tuyển chọn những kiệt tác mùi hương niche từ các nhà điều chế hương thơm danh tiếng trên thế giới.
+            </Typography>
+
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button
+                component={Link}
+                to="/products"
+                variant="contained"
+                endIcon={<ArrowForwardIcon sx={{ fontSize: '18px !important', transition: 'transform 0.25s' }} />}
+                sx={{
+                  backgroundColor: '#c5a059',
+                  color: '#ffffff',
+                  borderRadius: '9999px',
+                  px: 3.8,
+                  py: 1.25,
+                  fontWeight: 500,
+                  fontSize: '0.88rem',
+                  letterSpacing: '0.04em',
+                  textTransform: 'none',
+                  boxShadow: '0 10px 25px rgba(197, 160, 89, 0.35)',
+                  '&:hover': {
+                    backgroundColor: '#b88f42',
+                    boxShadow: '0 14px 30px rgba(197, 160, 89, 0.5)',
+                    '& .MuiButton-endIcon': {
+                      transform: 'translateX(4px)'
+                    }
+                  }
+                }}
+              >
+                Khám Phá Bộ Sưu Tập
+              </Button>
+
+              <Button
+                component={Link}
+                to="/products"
+                variant="outlined"
+                sx={{
+                  color: '#ffffff',
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  borderRadius: '9999px',
+                  px: 3.2,
+                  py: 1.25,
+                  fontWeight: 400,
+                  fontSize: '0.88rem',
+                  letterSpacing: '0.04em',
+                  textTransform: 'none',
+                  backdropFilter: 'blur(8px)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  '&:hover': {
+                    borderColor: '#ffffff',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                  }
+                }}
+              >
+                Xem Chi Tiết
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      </Container>
     </Box>
   );
 };

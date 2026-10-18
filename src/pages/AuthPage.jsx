@@ -1,443 +1,465 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
-  Drawer,
-  AppBar,
-  Toolbar,
-  List,
   Typography,
-  Divider,
-  IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Grid,
-  Paper,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
-  Chip,
   TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Button,
+  Tabs,
+  Tab,
+  Paper,
+  Fade,
+  Alert,
   CircularProgress
 } from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PeopleIcon from '@mui/icons-material/People';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import EditIcon from '@mui/icons-material/Edit';
-import LogoutIcon from '@mui/icons-material/Logout';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const drawerWidth = 260;
-
-const AdminPage = () => {
+const AuthPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [products, setProducts] = useState([]);
+  const [tabIndex, setTabIndex] = useState(0);
+
+  // Form Login State
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Form Register State
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-  // State Dialog thêm sản phẩm
-  const [openDialog, setOpenDialog] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    category: 'Eau de Parfum',
-    price: '',
-    rating: 5,
-    image: '',
-    description: ''
-  });
-
-  const currentUser = JSON.parse(localStorage.getItem('user')) || {
-    name: 'Admin',
-    email: 'admin@gmail.com',
-    role: 'admin'
+  const handleTabChange = (event, newValue) => {
+    setTabIndex(newValue);
+    setErrorMsg('');
+    setSuccessMsg('');
   };
 
-  // Tải danh sách sản phẩm từ Backend
-  const fetchProducts = async () => {
+  // Xử lý Đăng Nhập
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
     try {
-      const res = await fetch('http://localhost:5000/api/products');
-      if (!res.ok) throw new Error('Không thể lấy danh sách sản phẩm');
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword })
+      });
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setProducts(data);
+      if (!res.ok) {
+        throw new Error(data.message || 'Đăng nhập không thành công');
+      }
+
+      // Lưu thông tin người dùng vào localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Phân quyền điều hướng
+      if (data.user.role === 'admin') {
+        navigate('/admin');
       } else {
-        setProducts([]);
+        navigate('/');
       }
     } catch (err) {
-      console.error('Lỗi lấy danh sách sản phẩm:', err);
-      setProducts([]);
+      setErrorMsg(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  // Xử lý thêm sản phẩm
-  const handleAddProduct = async (e) => {
+  // Xử lý Đăng Ký
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
     try {
-      const res = await fetch('http://localhost:5000/api/products', {
+      const res = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct)
+        body: JSON.stringify({ name: regName, email: regEmail, password: regPassword })
       });
-      if (res.ok) {
-        setOpenDialog(false);
-        setNewProduct({ name: '', category: 'Eau de Parfum', price: '', rating: 5, image: '', description: '' });
-        fetchProducts();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Đăng ký không thành công');
       }
+
+      setSuccessMsg('Đăng ký tài khoản thành công! Vui lòng chuyển sang Đăng nhập.');
+      setTabIndex(0);
+      setLoginEmail(regEmail);
     } catch (err) {
-      console.error('Lỗi thêm sản phẩm:', err);
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
-  // Render Nội dung chính tùy theo Tab được chọn
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return (
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', mb: 1, color: '#1a1a1a' }}>
-              Dashboard
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#777', mb: 4 }}>
-              Tổng quan chỉ số hoạt động của cửa hàng nước hoa ESSENCE
-            </Typography>
-
-            <Grid container spacing={3} sx={{ mb: 5 }}>
-              <Grid item xs={12} sm={4}>
-                <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff' }}>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>Users Volume</Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 700, my: 1.5 }}>8</Typography>
-                  <Button size="small" onClick={() => setActiveTab('users')} endIcon={<ArrowForwardIcon fontSize="small" />} sx={{ color: '#fff', p: 0, textTransform: 'none' }}>View Details</Button>
-                </Paper>
-              </Grid>
-
-              <Grid item xs={12} sm={4}>
-                <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)', color: '#fff' }}>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>Products Volume</Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 700, my: 1.5 }}>{products.length}</Typography>
-                  <Button size="small" onClick={() => setActiveTab('products')} endIcon={<ArrowForwardIcon fontSize="small" />} sx={{ color: '#fff', p: 0, textTransform: 'none' }}>View Details</Button>
-                </Paper>
-              </Grid>
-
-              <Grid item xs={12} sm={4}>
-                <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff' }}>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>Orders Volume</Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 700, my: 1.5 }}>25</Typography>
-                  <Button size="small" onClick={() => setActiveTab('orders')} endIcon={<ArrowForwardIcon fontSize="small" />} sx={{ color: '#fff', p: 0, textTransform: 'none' }}>View Details</Button>
-                </Paper>
-              </Grid>
-            </Grid>
-
-            {/* Bảng Danh sách Sản phẩm xem nhanh */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid #eaeaea' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: '"Playfair Display", serif' }}>
-                  Sản phẩm mới cập nhật
-                </Typography>
-                <Button variant="outlined" size="small" onClick={() => setActiveTab('products')} sx={{ textTransform: 'none', borderColor: '#1a1a1a', color: '#1a1a1a' }}>
-                  Xem tất cả
-                </Button>
-              </Box>
-              <TableContainer>
-                <Table>
-                  <TableHead sx={{ backgroundColor: '#fafafa' }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Sản phẩm</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Loại</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Giá bán</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Đánh giá</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(Array.isArray(products) ? products : []).slice(0, 5).map((row) => (
-                      <TableRow key={row._id || Math.random()} hover>
-                        <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar src={row.image} variant="rounded" sx={{ width: 40, height: 40 }} />
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.name}</Typography>
-                        </TableCell>
-                        <TableCell><Chip label={row.category || 'N/A'} size="small" sx={{ backgroundColor: '#f0f0f0', fontSize: '0.75rem' }} /></TableCell>
-                        <TableCell sx={{ color: '#d4af37', fontWeight: 600 }}>{row.price}</TableCell>
-                        <TableCell>{row.rating || 5} ⭐</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          </Box>
-        );
-
-      case 'products':
-        return (
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
-                  Quản Lý Sản Phẩm
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#777' }}>
-                  Danh sách nước hoa trong cơ sở dữ liệu MongoDB
-                </Typography>
-              </Box>
-
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setOpenDialog(true)}
-                sx={{ backgroundColor: '#1a1a1a', color: '#fff', borderRadius: '8px', px: 3, textTransform: 'none', '&:hover': { backgroundColor: '#b89735' } }}
-              >
-                Thêm sản phẩm mới
-              </Button>
-            </Box>
-
-            <Paper elevation={0} sx={{ borderRadius: '16px', border: '1px solid #eaeaea', overflow: 'hidden' }}>
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                  <CircularProgress sx={{ color: '#b89735' }} />
-                </Box>
-              ) : (
-                <TableContainer>
-                  <Table>
-                    <TableHead sx={{ backgroundColor: '#1a1a1a' }}>
-                      <TableRow>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Hình ảnh</TableCell>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Tên nước hoa</TableCell>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Phân loại</TableCell>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Giá</TableCell>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }} align="right">Hành động</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {Array.isArray(products) && products.length > 0 ? (
-                        products.map((p) => (
-                          <TableRow key={p._id || Math.random()} hover>
-                            <TableCell>
-                              <Avatar src={p.image} variant="rounded" sx={{ width: 48, height: 48 }} />
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>{p.name}</TableCell>
-                            <TableCell>{p.category}</TableCell>
-                            <TableCell sx={{ color: '#d4af37', fontWeight: 700 }}>{p.price}</TableCell>
-                            <TableCell align="right">
-                              <IconButton size="small" sx={{ color: '#666' }}><EditIcon fontSize="small" /></IconButton>
-                              <IconButton size="small" sx={{ color: '#ef4444' }}><DeleteOutlineIcon fontSize="small" /></IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={5} align="center" sx={{ py: 4, color: '#777' }}>
-                            Chưa có sản phẩm nào trong cơ sở dữ liệu. Hãy bấm "Thêm sản phẩm mới".
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-            </Paper>
-          </Box>
-        );
-
-      case 'users':
-        return (
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', mb: 1 }}>
-              Quản Lý Người Dùng
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#777', mb: 4 }}>
-              Danh sách tài khoản khách hàng và quản trị viên
-            </Typography>
-            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: '16px', border: '1px solid #eaeaea' }}>
-              <Typography color="textSecondary">Danh sách người dùng đang được đồng bộ...</Typography>
-            </Paper>
-          </Box>
-        );
-
-      case 'orders':
-        return (
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', mb: 1 }}>
-              Quản Lý Đơn Hàng
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#777', mb: 4 }}>
-              Theo dõi tình trạng đơn hàng từ khách mua
-            </Typography>
-            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: '16px', border: '1px solid #eaeaea' }}>
-              <Typography color="textSecondary">Hiện tại chưa có đơn hàng mới nào.</Typography>
-            </Paper>
-          </Box>
-        );
-
-      default:
-        return null;
+  const authConfig = [
+    {
+      image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80',
+      quote: '“Hương thơm là bản tuyên ngôn không lời của phong cách và đẳng cấp.”',
+      subQuote: 'ESSENCE HAUTE PARFUMERIE',
+      reverse: false
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=1200&q=80',
+      quote: '“Khởi đầu hành trình đánh thức những xúc cảm độc bản.”',
+      subQuote: 'ĐẶC QUYỀN THÀNH VIÊN',
+      reverse: true
     }
-  };
+  ];
+
+  const currentConfig = authConfig[tabIndex];
 
   return (
-    <Box sx={{ display: 'flex', backgroundColor: '#faf9f6', minHeight: '100vh' }}>
-      <AppBar
-        position="fixed"
+    <Box
+      sx={{
+        width: '100vw',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f6f4ee',
+        position: 'relative',
+        p: { xs: 2, md: 4 }
+      }}
+    >
+      {/* Nút quay lại trang chủ */}
+      <Button
+        component={Link}
+        to="/"
+        startIcon={<ArrowBackIcon sx={{ fontSize: '18px !important' }} />}
         sx={{
-          width: `calc(100% - ${drawerWidth}px)`,
-          ml: `${drawerWidth}px`,
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          color: '#18181b',
+          textTransform: 'none',
+          fontWeight: 500,
+          fontSize: '0.86rem',
           backgroundColor: '#ffffff',
-          color: '#1a1a1a',
-          boxShadow: 'none',
-          borderBottom: '1px solid #eaeaea'
+          px: 2.4,
+          py: 0.9,
+          borderRadius: '9999px',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
+          border: '1px solid rgba(0,0,0,0.06)',
+          zIndex: 10,
+          '&:hover': { backgroundColor: '#fcfbf9', borderColor: '#18181b' }
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            Hệ thống Quản trị ESSENCE
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              Welcome, {currentUser.name}!
-            </Typography>
-            <Avatar sx={{ width: 32, height: 32, backgroundColor: '#d4af37', fontSize: '0.85rem' }}>
-              A
-            </Avatar>
-          </Box>
-        </Toolbar>
-      </AppBar>
+        Về Trang Chủ
+      </Button>
 
-      <Drawer
+      {/* Card Form Xác thực Tổng thể */}
+      <Paper
+        elevation={0}
         sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            backgroundColor: '#111111',
-            color: '#ffffff',
+          width: '100%',
+          maxWidth: '960px',
+          minHeight: '600px',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: currentConfig.reverse ? 'row-reverse' : 'row' },
+          borderRadius: '24px',
+          overflow: 'hidden',
+          boxShadow: '0 25px 60px -15px rgba(0,0,0,0.08)',
+          border: '1px solid rgba(0,0,0,0.06)',
+          backgroundColor: '#ffffff',
+          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+      >
+        {/* 1. Phần Hình ảnh nghệ thuật & Quote */}
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'block' },
+            flex: 1.1,
+            position: 'relative',
+            backgroundImage: `url('${currentConfig.image}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            transition: 'background-image 0.6s ease-in-out'
+          }}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to top, rgba(17,17,17,0.85) 0%, rgba(17,17,17,0.3) 60%, rgba(17,17,17,0.1) 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'flex-end',
+              p: 6
+            }}
+          >
+            <Fade in={true} timeout={700} key={tabIndex}>
+              <Box>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: '#c5a059',
+                    fontWeight: 600,
+                    letterSpacing: '0.25em',
+                    fontSize: '0.75rem',
+                    display: 'block',
+                    mb: 1
+                  }}
+                >
+                  {currentConfig.subQuote}
+                </Typography>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    color: '#ffffff',
+                    fontFamily: '"Playfair Display", serif',
+                    fontWeight: 500,
+                    fontStyle: 'italic',
+                    lineHeight: 1.5,
+                    letterSpacing: '0.02em',
+                    textShadow: '0 2px 12px rgba(0,0,0,0.5)'
+                  }}
+                >
+                  {currentConfig.quote}
+                </Typography>
+              </Box>
+            </Fade>
+          </Box>
+        </Box>
+
+        {/* 2. Phần Form Nhập Liệu */}
+        <Box
+          sx={{
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between'
-          },
-        }}
-        variant="permanent"
-        anchor="left"
-      >
-        <Box>
-          <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '3px', fontFamily: '"Playfair Display", serif', color: '#fff' }}>
-              ESSENCE<span style={{ color: '#d4af37' }}>.</span>
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#777', fontSize: '0.7rem', letterSpacing: '1px' }}>
-              ADMIN DASHBOARD
-            </Typography>
+            justifyContent: 'center',
+            alignItems: 'center',
+            px: { xs: 3.5, md: 6 },
+            py: 6,
+            backgroundColor: '#ffffff'
+          }}
+        >
+          <Box sx={{ width: '100%', maxWidth: '380px' }}>
+            <Box sx={{ textAlign: 'center', mb: 3.5 }}>
+              <Typography
+                variant="h5"
+                component={Link}
+                to="/"
+                sx={{
+                  fontWeight: 700,
+                  letterSpacing: '0.2em',
+                  color: '#18181b',
+                  textDecoration: 'none',
+                  fontFamily: '"Playfair Display", serif',
+                  display: 'inline-flex',
+                  alignItems: 'baseline',
+                  mb: 1
+                }}
+              >
+                ESSENCE
+                <Box component="span" sx={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#c5a059', ml: 0.5 }} />
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#71717a', fontSize: '0.88rem' }}>
+                {tabIndex === 0 ? 'Chào mừng quý khách trở lại trải nghiệm' : 'Đăng ký thành viên để nhận đặc quyền riêng'}
+              </Typography>
+            </Box>
+
+            {/* Thông báo Alert */}
+            {errorMsg && (
+              <Alert severity="error" sx={{ mb: 2.5, borderRadius: '10px', fontSize: '0.84rem' }}>
+                {errorMsg}
+              </Alert>
+            )}
+            {successMsg && (
+              <Alert severity="success" sx={{ mb: 2.5, borderRadius: '10px', fontSize: '0.84rem' }}>
+                {successMsg}
+              </Alert>
+            )}
+
+            <Tabs
+              value={tabIndex}
+              onChange={handleTabChange}
+              centered
+              sx={{
+                mb: 3.5,
+                borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                '& .MuiTabs-indicator': { backgroundColor: '#c5a059', height: '2px' },
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.92rem',
+                  letterSpacing: '0.02em',
+                  color: '#71717a',
+                  pb: 1.5,
+                  '&.Mui-selected': { color: '#18181b' }
+                }
+              }}
+            >
+              <Tab label="Đăng Nhập" />
+              <Tab label="Đăng Ký" />
+            </Tabs>
+
+            <Fade in={true} timeout={400} key={tabIndex}>
+              <Box>
+                {tabIndex === 0 ? (
+                  /* Form Đăng Nhập */
+                  <Box component="form" onSubmit={handleLoginSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.2 }}>
+                    <TextField
+                      label="Email của bạn"
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        startAdornment: <EmailOutlinedIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: '18px' }} />,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '10px',
+                          '& fieldset': { borderColor: 'rgba(0,0,0,0.1)' },
+                          '&.Mui-focused fieldset': { borderColor: '#c5a059' }
+                        }
+                      }}
+                    />
+                    <TextField
+                      label="Mật khẩu"
+                      type="password"
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        startAdornment: <LockOutlinedIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: '18px' }} />,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '10px',
+                          '& fieldset': { borderColor: 'rgba(0,0,0,0.1)' },
+                          '&.Mui-focused fieldset': { borderColor: '#c5a059' }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={loading}
+                      fullWidth
+                      sx={{
+                        backgroundColor: '#18181b',
+                        color: '#ffffff',
+                        py: 1.2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.88rem',
+                        letterSpacing: '0.04em',
+                        borderRadius: '9999px',
+                        boxShadow: 'none',
+                        mt: 1,
+                        '&:hover': { backgroundColor: '#c5a059' }
+                      }}
+                    >
+                      {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Đăng Nhập'}
+                    </Button>
+                  </Box>
+                ) : (
+                  /* Form Đăng Ký */
+                  <Box component="form" onSubmit={handleRegisterSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.2 }}>
+                    <TextField
+                      label="Họ và tên"
+                      required
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        startAdornment: <PersonOutlineOutlinedIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: '18px' }} />,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '10px',
+                          '& fieldset': { borderColor: 'rgba(0,0,0,0.1)' },
+                          '&.Mui-focused fieldset': { borderColor: '#c5a059' }
+                        }
+                      }}
+                    />
+                    <TextField
+                      label="Email của bạn"
+                      type="email"
+                      required
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        startAdornment: <EmailOutlinedIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: '18px' }} />,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '10px',
+                          '& fieldset': { borderColor: 'rgba(0,0,0,0.1)' },
+                          '&.Mui-focused fieldset': { borderColor: '#c5a059' }
+                        }
+                      }}
+                    />
+                    <TextField
+                      label="Mật khẩu"
+                      type="password"
+                      required
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        startAdornment: <LockOutlinedIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: '18px' }} />,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '10px',
+                          '& fieldset': { borderColor: 'rgba(0,0,0,0.1)' },
+                          '&.Mui-focused fieldset': { borderColor: '#c5a059' }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={loading}
+                      fullWidth
+                      sx={{
+                        backgroundColor: '#18181b',
+                        color: '#ffffff',
+                        py: 1.2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.88rem',
+                        letterSpacing: '0.04em',
+                        borderRadius: '9999px',
+                        boxShadow: 'none',
+                        mt: 1,
+                        '&:hover': { backgroundColor: '#c5a059' }
+                      }}
+                    >
+                      {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Tạo Tài Khoản'}
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            </Fade>
           </Box>
-
-          <Divider sx={{ borderColor: '#222' }} />
-
-          <Typography variant="caption" sx={{ px: 3, pt: 2, pb: 1, display: 'block', color: '#555', fontWeight: 700 }}>
-            FEATURES
-          </Typography>
-
-          <List sx={{ px: 1.5 }}>
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                selected={activeTab === 'dashboard'}
-                onClick={() => setActiveTab('dashboard')}
-                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
-              >
-                <ListItemIcon sx={{ color: activeTab === 'dashboard' ? '#d4af37' : '#888', minWidth: 40 }}><DashboardIcon /></ListItemIcon>
-                <ListItemText primary="Dashboard" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                selected={activeTab === 'users'}
-                onClick={() => setActiveTab('users')}
-                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
-              >
-                <ListItemIcon sx={{ color: activeTab === 'users' ? '#d4af37' : '#888', minWidth: 40 }}><PeopleIcon /></ListItemIcon>
-                <ListItemText primary="User" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                selected={activeTab === 'products'}
-                onClick={() => setActiveTab('products')}
-                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
-              >
-                <ListItemIcon sx={{ color: activeTab === 'products' ? '#d4af37' : '#888', minWidth: 40 }}><InventoryIcon /></ListItemIcon>
-                <ListItemText primary="Product" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                selected={activeTab === 'orders'}
-                onClick={() => setActiveTab('orders')}
-                sx={{ borderRadius: '8px', '&.Mui-selected': { backgroundColor: '#222', color: '#d4af37' }, '&:hover': { backgroundColor: '#1a1a1a' } }}
-              >
-                <ListItemIcon sx={{ color: activeTab === 'orders' ? '#d4af37' : '#888', minWidth: 40 }}><ShoppingBagIcon /></ListItemIcon>
-                <ListItemText primary="Order" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }} />
-              </ListItemButton>
-            </ListItem>
-          </List>
         </Box>
-
-        <Box sx={{ p: 2, borderTop: '1px solid #222', backgroundColor: '#0a0a0a' }}>
-          <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>Logged in as:</Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#fff', mb: 1 }}>{currentUser.name}</Typography>
-          <Button size="small" startIcon={<LogoutIcon fontSize="small" />} onClick={handleLogout} sx={{ color: '#ef4444', textTransform: 'none', p: 0, fontSize: '0.8rem' }}>
-            Đăng xuất
-          </Button>
-        </Box>
-      </Drawer>
-
-      <Box component="main" sx={{ flexGrow: 1, p: 4, mt: 8 }}>
-        {renderContent()}
-      </Box>
-
-      {/* Dialog Thêm sản phẩm mới */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Thêm nước hoa mới</DialogTitle>
-        <Box component="form" onSubmit={handleAddProduct}>
-          <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField label="Tên sản phẩm" fullWidth required size="small" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} />
-            <TextField label="Phân loại (VD: Eau de Parfum)" fullWidth required size="small" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} />
-            <TextField label="Giá bán (VD: 4.200.000đ)" fullWidth required size="small" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} />
-            <TextField label="Đường dẫn ảnh (URL)" fullWidth required size="small" value={newProduct.image} onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })} />
-            <TextField label="Mô tả nốt hương" fullWidth multiline rows={3} size="small" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} />
-          </DialogContent>
-          <DialogActions sx={{ p: 2.5 }}>
-            <Button onClick={() => setOpenDialog(false)} sx={{ color: '#666' }}>Hủy</Button>
-            <Button type="submit" variant="contained" sx={{ backgroundColor: '#1a1a1a', color: '#fff', '&:hover': { backgroundColor: '#b89735' } }}>Lưu sản phẩm</Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
+      </Paper>
     </Box>
   );
 };
 
-export default AdminPage;
+export default AuthPage;

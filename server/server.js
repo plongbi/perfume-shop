@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const User = require('./models/User');
 const Product = require('./models/Product');
+const Order = require('./models/Order');
 
 const app = express();
 
@@ -28,6 +29,17 @@ app.get('/api/products', async (req, res) => {
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: 'Lỗi máy chủ', error: err.message });
+  }
+});
+
+// 1.1 Lấy chi tiết 1 sản phẩm theo ID
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi tìm sản phẩm', error: err.message });
   }
 });
 
@@ -86,6 +98,108 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Lỗi đăng nhập', error: err.message });
+  }
+});
+
+// 5. API Lấy danh sách toàn bộ Người Dùng (phục vụ trang Admin)
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi lấy danh sách người dùng', error: err.message });
+  }
+});
+
+// ================= API ĐƠN HÀNG (LỊCH SỬ MUA HÀNG) ================= //
+
+// 6. Tạo đơn hàng mới
+app.post('/api/orders', async (req, res) => {
+  try {
+    const {
+      userId,
+      userEmail,
+      recipientName,
+      phone,
+      address,
+      items,
+      totalAmount,
+      shippingFee,
+      paymentMethod,
+      paymentStatus
+    } = req.body;
+
+    // Sinh mã đơn hàng ngẫu nhiên: ví dụ ORD-89214
+    const orderCode = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+
+    const newOrder = new Order({
+      orderCode,
+      userId,
+      userEmail,
+      recipientName,
+      phone,
+      address,
+      items,
+      totalAmount,
+      shippingFee,
+      paymentMethod: paymentMethod || 'COD',
+      paymentStatus: paymentStatus || (paymentMethod === 'VNPAY' ? 'Paid' : 'Pending'),
+      orderStatus: 'Processing'
+    });
+
+    const savedOrder = await newOrder.save();
+    res.status(201).json(savedOrder);
+  } catch (err) {
+    console.error('Lỗi tạo đơn hàng:', err);
+    res.status(500).json({ message: 'Không thể tạo đơn hàng', error: err.message });
+  }
+});
+
+// 7. Lấy toàn bộ đơn hàng (dành cho Admin)
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi lấy danh sách đơn hàng', error: err.message });
+  }
+});
+
+// 8. Lấy lịch sử đơn hàng của cá nhân (theo email hoặc userId)
+app.get('/api/orders/user/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const orders = await Order.find({
+      $or: [{ userEmail: email }, { userId: email }]
+    }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi lấy lịch sử đơn hàng cá nhân', error: err.message });
+  }
+});
+
+// 9.1 Xóa sạch toàn bộ đơn hàng
+app.delete('/api/orders', async (req, res) => {
+  try {
+    await Order.deleteMany({});
+    res.json({ message: 'Đã xóa toàn bộ đơn hàng thành công' });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi xóa đơn hàng', error: err.message });
+  }
+});
+
+// 9. Cập nhật trạng thái đơn hàng (dành cho Admin)
+app.patch('/api/orders/:id/status', async (req, res) => {
+  try {
+    const { orderStatus, paymentStatus } = req.body;
+    const updateData = {};
+    if (orderStatus) updateData.orderStatus = orderStatus;
+    if (paymentStatus) updateData.paymentStatus = paymentStatus;
+
+    const updated = await Order.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi cập nhật trạng thái đơn hàng', error: err.message });
   }
 });
 
