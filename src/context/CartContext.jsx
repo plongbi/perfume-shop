@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
+  const lastAddCallRef = useRef({ time: 0, id: '' });
   const [cart, setCart] = useState(() => {
     try {
       const localCart = localStorage.getItem('perfume_cart');
@@ -10,27 +11,8 @@ export const CartProvider = ({ children }) => {
     } catch (e) {
       console.error('Error loading cart from localStorage', e);
     }
-    // Mặc định cho sẵn 2 sản phẩm mẫu sang trọng nếu giỏ ban đầu trống để người dùng trải nghiệm ngay
-    return [
-      {
-        _id: 'sample-1',
-        name: 'Lost Cherry - Tom Ford',
-        category: 'Eau de Parfum',
-        price: '4.225.000₫',
-        rawPrice: 4225000,
-        image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80',
-        quantity: 1
-      },
-      {
-        _id: 'sample-2',
-        name: 'Another 13 - Le Labo',
-        category: 'Eau de Parfum',
-        price: '5.200.000₫',
-        rawPrice: 5200000,
-        image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=600&q=80',
-        quantity: 1
-      }
-    ];
+    // Giỏ hàng bắt đầu trống nếu chưa có trong localStorage
+    return [];
   });
 
   // Tự động lưu vào localStorage mỗi khi giỏ thay đổi
@@ -50,14 +32,30 @@ export const CartProvider = ({ children }) => {
     return parseInt(cleanStr, 10) || 0;
   };
 
-  // Thêm sản phẩm vào giỏ (hỗ trợ số lượng tùy chọn quantityToAdd)
+  // Thêm sản phẩm vào giỏ (hỗ trợ số lượng tùy chọn quantityToAdd, có debounce chống double-click / StrictMode duplicate)
   const addToCart = (product, quantityToAdd = 1) => {
+    const now = Date.now();
+    const itemKey = product._id || product.id || product.name;
+    // Chặn nếu cùng 1 sản phẩm bị gọi liên tiếp trong vòng 400ms
+    if (
+      lastAddCallRef.current.id === itemKey &&
+      now - lastAddCallRef.current.time < 400
+    ) {
+      return;
+    }
+    lastAddCallRef.current = { time: now, id: itemKey };
+
     setCart((prevCart) => {
-      const existingIndex = prevCart.findIndex((item) => (item._id && item._id === product._id) || item.name === product.name);
+      const existingIndex = prevCart.findIndex(
+        (item) => (item._id && item._id === product._id) || item.name === product.name
+      );
+
       if (existingIndex > -1) {
-        const updated = [...prevCart];
-        updated[existingIndex].quantity += quantityToAdd;
-        return updated;
+        return prevCart.map((item, index) =>
+          index === existingIndex
+            ? { ...item, quantity: item.quantity + quantityToAdd }
+            : item
+        );
       } else {
         return [
           ...prevCart,

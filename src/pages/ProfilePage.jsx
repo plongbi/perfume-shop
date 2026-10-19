@@ -26,13 +26,14 @@ import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Tab: 'profile' (Chỉnh sửa hồ sơ) hoặc 'orders' (Lịch sử đơn hàng)
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(location.state?.tab || 'orders');
 
   // Lấy dữ liệu user từ localStorage nếu có, nếu chưa có tạo tài khoản mặc định
   const [user, setUser] = useState(() => {
@@ -65,31 +66,54 @@ const ProfilePage = () => {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
-  // Lấy lịch sử đơn hàng từ Backend API MongoDB Atlas
+  // Lấy lịch sử đơn hàng từ Backend API MongoDB Atlas và LocalStorage
   const fetchMyOrders = async () => {
     setLoadingOrders(true);
     const email = user.email || 'guest@gmail.com';
+    let serverOrders = [];
+
     try {
       const res = await fetch(`http://localhost:5000/api/orders/user/${encodeURIComponent(email)}`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          setOrders(data);
-          setLoadingOrders(false);
-          return;
+          serverOrders = data;
         }
       }
     } catch (e) {
       console.warn('Lỗi fetch đơn hàng từ server:', e);
     }
 
-    setOrders([]);
+    // Đọc thêm các đơn hàng vừa đặt lưu trong localStorage
+    let localOrders = [];
+    try {
+      localOrders = JSON.parse(localStorage.getItem('user_orders') || '[]');
+    } catch (e) {
+      localOrders = [];
+    }
+
+    // Kết hợp và lọc bỏ đơn trùng mã orderCode / _id
+    const mergedMap = new Map();
+    serverOrders.forEach(ord => {
+      const key = ord.orderCode || ord._id;
+      if (key) mergedMap.set(key, ord);
+    });
+    localOrders.forEach(ord => {
+      const key = ord.orderCode || ord._id;
+      if (key && !mergedMap.has(key)) {
+        mergedMap.set(key, ord);
+      }
+    });
+
+    const finalOrders = Array.from(mergedMap.values()).sort(
+      (a, b) => new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now())
+    );
+
+    setOrders(finalOrders);
     setLoadingOrders(false);
   };
 
   useEffect(() => {
-    // Xóa triệt để cache localStorage cũ
-    localStorage.removeItem('user_orders');
     fetchMyOrders();
   }, [user.email]);
 

@@ -47,18 +47,40 @@ const VNPayPaymentPage = () => {
       ...orderData,
       userId: orderData.userId || savedUser.id || savedUser._id || null,
       userEmail: orderData.userEmail || savedUser.email || 'guest@gmail.com',
+      items: (orderData.items || []).map(item => ({
+        ...item,
+        price: typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0
+      })),
       paymentMethod: 'VNPAY',
       paymentStatus: 'Paid'
     };
 
+    let savedOrderRecord = null;
     try {
-      await fetch('http://localhost:5000/api/orders', {
+      const res = await fetch('http://localhost:5000/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalPayload)
       });
+      if (res.ok) {
+        savedOrderRecord = await res.json();
+      }
     } catch (e) {
       console.error('Lỗi lưu đơn hàng VNPay:', e);
+    }
+
+    // Sao lưu vào localStorage 'user_orders'
+    try {
+      const localOrders = JSON.parse(localStorage.getItem('user_orders') || '[]');
+      const fallbackOrder = savedOrderRecord || {
+        ...finalPayload,
+        orderCode: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+        createdAt: new Date().toISOString(),
+        orderStatus: 'Processing'
+      };
+      localStorage.setItem('user_orders', JSON.stringify([fallbackOrder, ...localOrders]));
+    } catch (err) {
+      console.error('Lỗi backup VNPay order:', err);
     }
   };
 
@@ -167,23 +189,42 @@ const VNPayPaymentPage = () => {
               <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
                 Số tiền thanh toán: <strong style={{ color: '#10b981', fontSize: '1.15rem' }}>{formatPrice(orderData.totalAmount)}</strong>
               </Typography>
-              <Button
-                variant="contained"
-                onClick={() => navigate('/products')}
-                sx={{
-                  backgroundColor: '#005baa',
-                  color: '#ffffff',
-                  px: 4,
-                  py: 1.2,
-                  borderRadius: '9999px',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  textTransform: 'none',
-                  '&:hover': { backgroundColor: '#004785' }
-                }}
-              >
-                Hoàn tất & Về trang sản phẩm
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/profile')}
+                  sx={{
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    px: 3,
+                    py: 1.2,
+                    borderRadius: '9999px',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    '&:hover': { backgroundColor: '#059669' }
+                  }}
+                >
+                  Xem Lịch Sử Đơn Hàng →
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/products')}
+                  sx={{
+                    borderColor: '#005baa',
+                    color: '#005baa',
+                    px: 3,
+                    py: 1.2,
+                    borderRadius: '9999px',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    '&:hover': { backgroundColor: 'rgba(0, 91, 170, 0.05)', borderColor: '#005baa' }
+                  }}
+                >
+                  Tiếp Tục Mua Sắm
+                </Button>
+              </Box>
             </Box>
           ) : (
             <>

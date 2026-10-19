@@ -17,7 +17,7 @@ import CartPage from './pages/CartPage';
 import VNPayPaymentPage from './pages/VNPayPaymentPage';
 import ProfilePage from './pages/ProfilePage';
 import ProductDetailPage from './pages/ProductDetailPage';
-import { CartProvider } from './context/CartContext';
+import { CartProvider, useCart } from './context/CartContext';
 import './App.css';
 
 // Thiết lập theme tùy biến toàn diện cho Material UI phù hợp thời đại hiện nay
@@ -72,6 +72,7 @@ const ProtectedAdminRoute = ({ children }) => {
 };
 
 const HomePage = () => {
+  const { addToCart } = useCart();
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 28, seconds: 45 });
 
   useEffect(() => {
@@ -276,30 +277,63 @@ const HomePage = () => {
                 </Box>
               </Box>
 
-              <Button
-                component={Link}
-                to="/products"
-                variant="contained"
-                startIcon={<ShoppingBagOutlinedIcon sx={{ fontSize: '18px !important' }} />}
-                sx={{
-                  backgroundColor: '#18181b',
-                  color: '#ffffff',
-                  borderRadius: '9999px',
-                  px: 4,
-                  py: 1.4,
-                  fontWeight: 500,
-                  fontSize: '0.9rem',
-                  letterSpacing: '0.04em',
-                  alignSelf: { xs: 'stretch', sm: 'flex-start' },
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-                  '&:hover': {
-                    backgroundColor: '#c5a059',
-                    boxShadow: '0 12px 25px rgba(197, 160, 89, 0.35)'
-                  }
-                }}
-              >
-                Khám Phá Chi Tiết
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Button
+                  component={Link}
+                  to="/products"
+                  variant="contained"
+                  startIcon={<ShoppingBagOutlinedIcon sx={{ fontSize: '18px !important' }} />}
+                  sx={{
+                    backgroundColor: '#18181b',
+                    color: '#ffffff',
+                    borderRadius: '9999px',
+                    px: 3.5,
+                    py: 1.4,
+                    fontWeight: 500,
+                    fontSize: '0.9rem',
+                    letterSpacing: '0.04em',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+                    '&:hover': {
+                      backgroundColor: '#c5a059',
+                      boxShadow: '0 12px 25px rgba(197, 160, 89, 0.35)'
+                    }
+                  }}
+                >
+                  Khám Phá Chi Tiết
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    addToCart({
+                      _id: 'sample-1',
+                      name: 'Lost Cherry - Tom Ford (100ml)',
+                      category: 'Eau de Parfum',
+                      price: '4.225.000₫',
+                      originalPrice: '6.500.000₫',
+                      isSale: true,
+                      discountPercent: 35,
+                      rawPrice: 4225000,
+                      image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=1000&q=80'
+                    }, 1);
+                  }}
+                  sx={{
+                    borderColor: '#c5a059',
+                    color: '#c5a059',
+                    borderRadius: '9999px',
+                    px: 3,
+                    py: 1.4,
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    letterSpacing: '0.02em',
+                    '&:hover': {
+                      backgroundColor: 'rgba(197, 160, 89, 0.08)',
+                      borderColor: '#b88f42'
+                    }
+                  }}
+                >
+                  Thêm Ngay Vào Giỏ
+                </Button>
+              </Box>
             </Box>
           </Box>
         </Container>

@@ -112,6 +112,10 @@ const ProductDetailPage = () => {
     );
   }
 
+  // Kiểm tra sản phẩm có phải hàng đang Sale không
+  const isProductSale = product.isSale || product.name?.toLowerCase().includes('lost cherry');
+  const saleDiscount = product.discountPercent || 35;
+
   // Tính giá theo dung tích
   // Parse giá số từ chuỗi ví dụ "3.950.000₫"
   const rawPriceNumber = parseInt(product.price.replace(/[^\d]/g, ''), 10) || 3500000;
@@ -121,21 +125,39 @@ const ProductDetailPage = () => {
     ? Math.round(rawPriceNumber * 1.7)
     : rawPriceNumber;
 
+  // Giá gốc trước sale theo dung tích
+  const rawOriginalPriceNumber = product.originalPrice
+    ? parseInt(product.originalPrice.replace(/[^\d]/g, ''), 10)
+    : (isProductSale ? 6500000 : null);
+
+  const currentOriginalPriceNumber = rawOriginalPriceNumber
+    ? (selectedSize === '50ml'
+        ? Math.round(rawOriginalPriceNumber * 0.65)
+        : selectedSize === '200ml'
+        ? Math.round(rawOriginalPriceNumber * 1.7)
+        : rawOriginalPriceNumber)
+    : null;
+
   const formattedCurrentPrice = new Intl.NumberFormat('vi-VN').format(currentPriceNumber) + '₫';
+  const formattedOriginalPrice = currentOriginalPriceNumber
+    ? new Intl.NumberFormat('vi-VN').format(currentOriginalPriceNumber) + '₫'
+    : null;
+
   const notes = getFragranceNotes(product.name, product.category);
 
   const handleAddToCart = () => {
-    // Thêm vào giỏ với biến thể dung tích và số lượng
+    // Thêm vào giỏ với biến thể dung tích, số lượng và thông tin sale
     const itemToAdd = {
       ...product,
       _id: `${product._id || product.id}_${selectedSize}`,
       name: `${product.name} (${selectedSize})`,
       price: formattedCurrentPrice,
+      originalPrice: formattedOriginalPrice,
+      isSale: isProductSale,
+      discountPercent: saleDiscount,
       size: selectedSize
     };
     addToCart(itemToAdd, quantity);
-    setAddedNotice(true);
-    setTimeout(() => setAddedNotice(false), 3000);
   };
 
   return (
@@ -164,27 +186,6 @@ const ProductDetailPage = () => {
             Quay lại danh sách
           </Button>
         </Box>
-
-        {addedNotice && (
-          <Alert
-            icon={<CheckCircleOutlineOutlinedIcon fontSize="inherit" />}
-            severity="success"
-            sx={{
-              mb: 4,
-              borderRadius: '12px',
-              backgroundColor: '#f0fdf4',
-              color: '#166534',
-              '& .MuiAlert-icon': { color: '#16a34a' }
-            }}
-            action={
-              <Button component={Link} to="/cart" size="small" sx={{ color: '#166534', fontWeight: 700, textTransform: 'none' }}>
-                Xem giỏ hàng →
-              </Button>
-            }
-          >
-            Đã thêm <strong>{quantity}x {product.name} ({selectedSize})</strong> vào giỏ hàng thành công!
-          </Alert>
-        )}
 
         <Grid container spacing={{ xs: 4, md: 7 }} alignItems="flex-start">
           {/* CỘT TRÁI: ẢNH SẢN PHẨM CAO CẤP */}
@@ -286,20 +287,50 @@ const ProductDetailPage = () => {
 
             {/* Giá sản phẩm to rõ nét */}
             <Box sx={{ p: 2.5, backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', mb: 3.5, display: 'inline-block', width: '100%' }}>
-              <Typography variant="caption" sx={{ color: '#71717a', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Giá niêm yết chính hãng:
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mt: 0.5 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#71717a', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Giá ưu đãi chính hãng:
+                </Typography>
+                {isProductSale && (
+                  <Chip
+                    label={`TIẾT KIỆM -${saleDiscount}% (DEAL HÔM NAY)`}
+                    size="small"
+                    sx={{
+                      backgroundColor: '#ef4444',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.72rem',
+                      height: '22px',
+                      letterSpacing: '0.02em',
+                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.35)'
+                    }}
+                  />
+                )}
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mt: 0.8, flexWrap: 'wrap' }}>
                 <Typography
                   sx={{
                     fontSize: '2rem',
                     fontWeight: 800,
-                    color: '#18181b',
+                    color: isProductSale ? '#ef4444' : '#18181b',
                     fontFamily: '"Plus Jakarta Sans", sans-serif'
                   }}
                 >
                   {formattedCurrentPrice}
                 </Typography>
+                {formattedOriginalPrice && (
+                  <Typography
+                    sx={{
+                      fontSize: '1.25rem',
+                      color: '#a1a1aa',
+                      textDecoration: 'line-through',
+                      fontWeight: 500,
+                      fontFamily: '"Plus Jakarta Sans", sans-serif'
+                    }}
+                  >
+                    {formattedOriginalPrice}
+                  </Typography>
+                )}
                 <Typography sx={{ color: '#16a34a', fontSize: '0.88rem', fontWeight: 600 }}>
                   ✓ Đã bao gồm thuế VAT & Hộp quà cao cấp
                 </Typography>

@@ -216,6 +216,26 @@ const ProductPage = () => {
                       }}
                     />
 
+                    {/* Badge Giảm Giá Đặc Quyền (Deal) */}
+                    {(product.isSale || product.name?.toLowerCase().includes('lost cherry')) && (
+                      <Chip
+                        label={`-${product.discountPercent || 35}% DEAL`}
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          left: product.category ? '88px' : '8px',
+                          backgroundColor: '#ef4444',
+                          color: '#ffffff',
+                          fontSize: '0.6rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.04em',
+                          height: '20px',
+                          boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)'
+                        }}
+                      />
+                    )}
+
                     {/* Nút thích */}
                     <Box
                       sx={{
@@ -325,22 +345,43 @@ const ProductPage = () => {
                         mt: 'auto'
                       }}
                     >
-                      <Typography
-                        sx={{
-                          fontWeight: 700,
-                          color: '#18181b',
-                          fontSize: '0.98rem',
-                          fontFamily: '"Plus Jakarta Sans", "Montserrat", sans-serif',
-                          letterSpacing: '-0.01em'
-                        }}
-                      >
-                        {product.price}
-                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            color: (product.isSale || product.name?.toLowerCase().includes('lost cherry')) ? '#ef4444' : '#18181b',
+                            fontSize: '0.98rem',
+                            fontFamily: '"Plus Jakarta Sans", "Montserrat", sans-serif',
+                            letterSpacing: '-0.01em',
+                            lineHeight: 1.2
+                          }}
+                        >
+                          {product.price}
+                        </Typography>
+                        {(product.originalPrice || ((product.isSale || product.name?.toLowerCase().includes('lost cherry')) && '6.500.000₫')) && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: '#a1a1aa',
+                              textDecoration: 'line-through',
+                              fontSize: '0.74rem',
+                              fontWeight: 500,
+                              lineHeight: 1.1
+                            }}
+                          >
+                            {product.originalPrice || '6.500.000₫'}
+                          </Typography>
+                        )}
+                      </Box>
 
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={() => addToCart(product)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addToCart(product, 1);
+                        }}
                         startIcon={<ShoppingBagOutlinedIcon sx={{ fontSize: '13px !important' }} />}
                         sx={{
                           backgroundColor: '#18181b',

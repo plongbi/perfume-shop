@@ -8,6 +8,17 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 const sampleProducts = [
   // --- NHÓM 1: EAU DE PARFUM (EDP) ---
   {
+    name: 'Lost Cherry - Tom Ford',
+    category: 'Eau de Parfum',
+    price: '4.225.000₫',
+    originalPrice: '6.500.000₫',
+    isSale: true,
+    discountPercent: 35,
+    rating: 5.0,
+    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=1000&q=80',
+    description: 'Một hành trình mùi hương lôi cuốn và bí ẩn. Hương anh đào chín mọng quyện cùng rượu hạnh nhân và hoa hồng Thổ Nhĩ Kỳ, tạo nên dấu ấn gợi cảm khó quên.'
+  },
+  {
     name: 'Bleu de Chanel',
     category: 'Eau de Parfum',
     price: '3.950.000₫',

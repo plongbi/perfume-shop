@@ -42,10 +42,18 @@ const CartPage = () => {
   // Bước hiển thị: 'cart' hoặc 'checkout'
   const [step, setStep] = useState('cart');
 
-  // Thông tin người nhận
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [recipientPhone, setRecipientPhone] = useState('');
+  // Thông tin người nhận - tự động điền nếu người dùng đã đăng nhập / có lưu thông tin
+  const savedUserData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user')) || {};
+    } catch (e) {
+      return {};
+    }
+  })();
+
+  const [recipientName, setRecipientName] = useState(savedUserData.name || '');
+  const [recipientAddress, setRecipientAddress] = useState(savedUserData.address || '');
+  const [recipientPhone, setRecipientPhone] = useState(savedUserData.phone || '');
   const [formError, setFormError] = useState('');
 
   // Phương thức thanh toán: 'cod' hoặc 'vnpay'
@@ -95,7 +103,7 @@ const CartPage = () => {
       items: cart.map(item => ({
         productId: item._id || item.id,
         name: item.name,
-        price: item.price,
+        price: item.rawPrice || (typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10)) || 0,
         quantity: item.quantity,
         image: item.image,
         category: item.category
@@ -116,15 +124,33 @@ const CartPage = () => {
         }
       });
     } else {
-      // Thanh toán khi nhận hàng (COD) -> Lưu trực tiếp vào MongoDB Atlas
+      // Thanh toán khi nhận hàng (COD) -> Lưu trực tiếp vào MongoDB Atlas & đồng bộ LocalStorage backup
+      let savedOrderRecord = null;
       try {
-        await fetch('http://localhost:5000/api/orders', {
+        const res = await fetch('http://localhost:5000/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(orderPayload)
         });
+        if (res.ok) {
+          savedOrderRecord = await res.json();
+        }
       } catch (err) {
         console.error('Lỗi lưu đơn hàng:', err);
+      }
+
+      // Lưu fallback vào localStorage 'user_orders' để hiển thị ngay lập tức trong lịch sử
+      try {
+        const localOrders = JSON.parse(localStorage.getItem('user_orders') || '[]');
+        const fallbackOrder = savedOrderRecord || {
+          ...orderPayload,
+          orderCode: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+          createdAt: new Date().toISOString(),
+          orderStatus: 'Processing'
+        };
+        localStorage.setItem('user_orders', JSON.stringify([fallbackOrder, ...localOrders]));
+      } catch (e) {
+        console.error('Lỗi lưu local orders:', e);
       }
 
       setOrderSuccess(true);
@@ -178,25 +204,46 @@ const CartPage = () => {
               Cảm ơn quý khách đã lựa chọn <strong>ESSENCE Boutique</strong>. Chuyên viên mùi hương của chúng tôi sẽ liên hệ xác nhận và chuẩn bị đóng gói chống sốc cao cấp gửi đến quý khách.
             </Typography>
 
-            <Button
-              component={Link}
-              to="/products"
-              variant="contained"
-              sx={{
-                backgroundColor: '#18181b',
-                color: '#ffffff',
-                borderRadius: '9999px',
-                px: 4,
-                py: 1.3,
-                fontSize: '0.88rem',
-                fontWeight: 500,
-                letterSpacing: '0.04em',
-                textTransform: 'none',
-                '&:hover': { backgroundColor: '#c5a059' }
-              }}
-            >
-              Tiếp Tục Mua Sắm
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button
+                component={Link}
+                to="/profile"
+                variant="contained"
+                sx={{
+                  backgroundColor: '#c5a059',
+                  color: '#ffffff',
+                  borderRadius: '9999px',
+                  px: 3.5,
+                  py: 1.3,
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.02em',
+                  textTransform: 'none',
+                  '&:hover': { backgroundColor: '#b88f42' }
+                }}
+              >
+                Xem Lịch Sử Đơn Hàng →
+              </Button>
+              <Button
+                component={Link}
+                to="/products"
+                variant="outlined"
+                sx={{
+                  borderColor: '#18181b',
+                  color: '#18181b',
+                  borderRadius: '9999px',
+                  px: 3.5,
+                  py: 1.3,
+                  fontSize: '0.88rem',
+                  fontWeight: 500,
+                  letterSpacing: '0.02em',
+                  textTransform: 'none',
+                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.05)', borderColor: '#18181b' }
+                }}
+              >
+                Tiếp Tục Mua Sắm
+              </Button>
+            </Box>
           </Paper>
         </Container>
       </Box>
@@ -460,6 +507,30 @@ const CartPage = () => {
                     Thông Tin Thanh Toán
                   </Typography>
 
+                  {/* Danh sách tóm tắt các sản phẩm trong đơn */}
+                  <Typography sx={{ color: '#52525b', fontSize: '0.88rem', fontWeight: 600, mb: 1.2 }}>
+                    Sản phẩm thanh toán ({totalItems}):
+                  </Typography>
+                  <Box sx={{ mb: 2.5, maxHeight: '160px', overflowY: 'auto', pr: 0.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {cart.map((item, idx) => (
+                      <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+                          <Typography sx={{ fontSize: '0.84rem', fontWeight: 600, color: '#18181b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+                            {item.name}
+                          </Typography>
+                          {(item.isSale || item.name?.toLowerCase().includes('lost cherry')) && (
+                            <Chip label="DEAL" size="small" sx={{ height: '18px', fontSize: '0.58rem', backgroundColor: '#ef4444', color: '#fff', fontWeight: 700 }} />
+                          )}
+                          <Typography sx={{ color: '#71717a', fontSize: '0.78rem' }}>x{item.quantity}</Typography>
+                        </Box>
+                        <Typography sx={{ fontWeight: 700, color: (item.isSale || item.name?.toLowerCase().includes('lost cherry')) ? '#ef4444' : '#18181b', fontSize: '0.86rem' }}>
+                          {formatPrice((item.rawPrice || 0) * item.quantity)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                  <Divider sx={{ mb: 2, borderColor: 'rgba(0,0,0,0.06)' }} />
+
                   {/* Phí vận chuyển */}
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography sx={{ color: '#52525b', fontSize: '0.92rem' }}>
@@ -653,18 +724,32 @@ const CartPage = () => {
                           }}
                         />
                         <Box sx={{ flex: 1 }}>
-                          <Chip
-                            label={item.category || 'Eau de Parfum'}
-                            size="small"
-                            sx={{
-                              backgroundColor: '#f4eedb',
-                              color: '#856434',
-                              fontSize: '0.68rem',
-                              fontWeight: 700,
-                              height: '22px',
-                              mb: 0.8
-                            }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.8, flexWrap: 'wrap' }}>
+                            <Chip
+                              label={item.category || 'Eau de Parfum'}
+                              size="small"
+                              sx={{
+                                backgroundColor: '#f4eedb',
+                                color: '#856434',
+                                fontSize: '0.68rem',
+                                fontWeight: 700,
+                                height: '22px'
+                              }}
+                            />
+                            {(item.isSale || item.name?.toLowerCase().includes('lost cherry')) && (
+                              <Chip
+                                label={`DEAL -${item.discountPercent || 35}%`}
+                                size="small"
+                                sx={{
+                                  backgroundColor: '#ef4444',
+                                  color: '#ffffff',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 700,
+                                  height: '22px'
+                                }}
+                              />
+                            )}
+                          </Box>
                           <Typography
                             variant="subtitle1"
                             sx={{
@@ -677,9 +762,16 @@ const CartPage = () => {
                           >
                             {item.name}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: '#c5a059', fontWeight: 700, fontSize: '1rem', display: { xs: 'block', sm: 'none' }, mt: 0.6 }}>
-                            {formatPrice(unitPrice)}
-                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                            <Typography variant="body2" sx={{ color: (item.isSale || item.name?.toLowerCase().includes('lost cherry')) ? '#ef4444' : '#c5a059', fontWeight: 700, fontSize: '0.96rem' }}>
+                              {formatPrice(unitPrice)}
+                            </Typography>
+                            {(item.originalPrice || ((item.isSale || item.name?.toLowerCase().includes('lost cherry')) && '6.500.000₫')) && (
+                              <Typography variant="caption" sx={{ color: '#a1a1aa', textDecoration: 'line-through', fontWeight: 500, fontSize: '0.82rem' }}>
+                                {item.originalPrice || '6.500.000₫'}
+                              </Typography>
+                            )}
+                          </Box>
                         </Box>
                       </Box>
 
