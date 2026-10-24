@@ -28,7 +28,6 @@ const HeroBanner = () => {
             border: '1px solid rgba(0, 0, 0, 0.06)'
           }}
         >
-          {/* Lớp gradient overlay tinh tế */}
           <Box
             sx={{
               position: 'absolute',

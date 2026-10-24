@@ -26,7 +26,7 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
-// Dữ liệu fallback cho 3 tầng nốt hương dựa theo category và tên
+// Default fragrance notes fallback
 const getFragranceNotes = (productName = '', category = '') => {
   return {
     topNotes: ['Cam Bergamot Calabria', 'Quả Bưởi hồng', 'Hạt tiêu Tứ Xuyên'],
@@ -62,7 +62,7 @@ const ProductDetailPage = () => {
         console.warn('Lỗi fetch sản phẩm theo id:', err);
       }
 
-      // Fallback: Tìm từ danh sách API all products
+      // Products list fallback
       try {
         const resAll = await fetch('http://localhost:5000/api/products');
         if (resAll.ok) {
@@ -112,12 +112,11 @@ const ProductDetailPage = () => {
     );
   }
 
-  // Kiểm tra sản phẩm có phải hàng đang Sale không
+  // Check sale status
   const isProductSale = product.isSale || product.name?.toLowerCase().includes('lost cherry');
   const saleDiscount = product.discountPercent || 35;
 
-  // Tính giá theo dung tích
-  // Parse giá số từ chuỗi ví dụ "3.950.000₫"
+  // Calculate price by size
   const rawPriceNumber = parseInt(product.price.replace(/[^\d]/g, ''), 10) || 3500000;
   const currentPriceNumber = selectedSize === '50ml'
     ? Math.round(rawPriceNumber * 0.65)
@@ -125,7 +124,7 @@ const ProductDetailPage = () => {
     ? Math.round(rawPriceNumber * 1.7)
     : rawPriceNumber;
 
-  // Giá gốc trước sale theo dung tích
+  // Original price by size
   const rawOriginalPriceNumber = product.originalPrice
     ? parseInt(product.originalPrice.replace(/[^\d]/g, ''), 10)
     : (isProductSale ? 6500000 : null);
@@ -146,7 +145,7 @@ const ProductDetailPage = () => {
   const notes = getFragranceNotes(product.name, product.category);
 
   const handleAddToCart = () => {
-    // Thêm vào giỏ với biến thể dung tích, số lượng và thông tin sale
+    // Add item with size variant to cart
     const itemToAdd = {
       ...product,
       _id: `${product._id || product.id}_${selectedSize}`,
@@ -163,7 +162,7 @@ const ProductDetailPage = () => {
   return (
     <Box sx={{ backgroundColor: '#fcfbf9', minHeight: '90vh', py: { xs: 4, md: 6 } }}>
       <Container maxWidth="lg">
-        {/* Breadcrumb & Nút quay lại */}
+        {/* Breadcrumb, nút quay lại */}
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Breadcrumbs separator="›" aria-label="breadcrumb">
             <Link to="/" style={{ color: '#71717a', textDecoration: 'none', fontSize: '0.88rem' }}>Trang chủ</Link>
@@ -188,7 +187,7 @@ const ProductDetailPage = () => {
         </Box>
 
         <Grid container spacing={{ xs: 4, md: 7 }} alignItems="flex-start">
-          {/* CỘT TRÁI: ẢNH SẢN PHẨM CAO CẤP */}
+          {/* Cột trái, ảnh sản phẩm */}
           <Grid item xs={12} md={5.5}>
             <Paper
               elevation={0}
@@ -203,7 +202,7 @@ const ProductDetailPage = () => {
                 boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
               }}
             >
-              {/* Badge Phân Loại */}
+              {/* Badge phân loại */}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Chip
                   label={product.category || 'Eau de Parfum'}
@@ -249,9 +248,9 @@ const ProductDetailPage = () => {
             </Paper>
           </Grid>
 
-          {/* CỘT PHẢI: THÔNG TIN CHI TIẾT & CHỌN SIZE & NỐT HƯƠNG */}
+          {/* Cột phải, chi tiết, chọn size, nốt hương */}
           <Grid item xs={12} md={6.5}>
-            {/* Tên & Rating */}
+            {/* Tên, rating */}
             <Typography
               variant="overline"
               sx={{ color: '#c5a059', letterSpacing: '0.2em', fontWeight: 700, fontSize: '0.85rem' }}
@@ -344,7 +343,7 @@ const ProductDetailPage = () => {
 
             <Divider sx={{ mb: 3.5, borderColor: 'rgba(0,0,0,0.06)' }} />
 
-            {/* CHỌN DUNG TÍCH (SIZE 50ml, 100ml, 200ml) */}
+            {/* Chọn dung tích */}
             <Box sx={{ mb: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                 <Typography sx={{ fontWeight: 700, color: '#18181b', fontSize: '0.92rem' }}>
@@ -384,7 +383,7 @@ const ProductDetailPage = () => {
               </Box>
             </Box>
 
-            {/* SỐ LƯỢNG VÀ NÚT THÊM GIỎ HÀNG */}
+            {/* Số lượng, nút thêm giỏ hàng */}
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 4.5, flexWrap: 'wrap' }}>
               <Box
                 sx={{
@@ -440,7 +439,7 @@ const ProductDetailPage = () => {
               </Button>
             </Box>
 
-            {/* KHỐI 3 TẦNG NỐT HƯƠNG ĐẶC TRƯNG (OLFACTORY PYRAMID) */}
+            {/* 3 tầng nốt hương */}
             <Paper
               elevation={0}
               sx={{

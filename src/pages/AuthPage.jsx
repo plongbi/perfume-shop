@@ -21,11 +21,11 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
 
-  // Form Login State
+  // Login state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  // Form Register State
+  // Register state
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -40,7 +40,7 @@ const AuthPage = () => {
     setSuccessMsg('');
   };
 
-  // Xử lý Đăng Nhập
+  // Login handler
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -56,10 +56,10 @@ const AuthPage = () => {
         throw new Error(data.message || 'Đăng nhập không thành công');
       }
 
-      // Lưu thông tin người dùng vào localStorage
+      // Save user to local storage
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Phân quyền điều hướng
+      // Role-based redirect
       if (data.user.role === 'admin') {
         navigate('/admin');
       } else {
@@ -72,7 +72,7 @@ const AuthPage = () => {
     }
   };
 
-  // Xử lý Đăng Ký
+  // Register handler
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);

@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: perfume-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb+srv://LongMERNStack:Long1234@cluster0-long.rswmtit.mongodb.net/perfume?retryWrites=true&w=majority
+    networks:
+      - perfume-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: perfume-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - perfume-network
+
+networks:
+  perfume-network:
+    driver: bridge

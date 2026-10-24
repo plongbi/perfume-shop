@@ -15,14 +15,15 @@ app.use(express.json());
 const dns = require("node:dns");
 
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
-// Kết nối MongoDB Atlas
+
+// Connect MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Đã kết nối thành công tới MongoDB Atlas!'))
   .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
 
-// ================= API SẢN PHẨM ================= //
+// --- Product APIs ---
 
-// 1. Lấy danh sách toàn bộ sản phẩm
+// Get all products
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.find();
@@ -32,7 +33,7 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// 1.1 Lấy chi tiết 1 sản phẩm theo ID
+// Get product by id
 app.get('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -43,7 +44,7 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// 2. Thêm sản phẩm mới vào Database
+// Add product to db
 app.post('/api/products', async (req, res) => {
   try {
     const newProduct = new Product(req.body);
@@ -54,9 +55,9 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-// ================= API ĐĂNG NHẬP / ĐĂNG KÝ ================= //
+// --- Auth APIs ---
 
-// 3. API Đăng Ký Tài Khoản
+// Register user
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
@@ -65,7 +66,6 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ message: 'Email này đã được đăng ký!' });
     }
 
-    // Cho phép truyền role khi khởi tạo (mặc định là 'user' nếu không truyền)
     const newUser = new User({
       name,
       email,
@@ -83,7 +83,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// 4. API Đăng Nhập
+// Login user
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -101,7 +101,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// 5. API Lấy danh sách toàn bộ Người Dùng (phục vụ trang Admin)
+// Get users list
 app.get('/api/users', async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
@@ -111,9 +111,9 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// ================= API ĐƠN HÀNG (LỊCH SỬ MUA HÀNG) ================= //
+// --- Order APIs ---
 
-// 6. Tạo đơn hàng mới
+// Create order
 app.post('/api/orders', async (req, res) => {
   try {
     const {
@@ -129,7 +129,7 @@ app.post('/api/orders', async (req, res) => {
       paymentStatus
     } = req.body;
 
-    // Sinh mã đơn hàng ngẫu nhiên: ví dụ ORD-89214
+    // Generate order code
     const orderCode = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
     const newOrder = new Order({
@@ -155,7 +155,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// 7. Lấy toàn bộ đơn hàng (dành cho Admin)
+// Get all orders
 app.get('/api/orders', async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -165,7 +165,7 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
-// 8. Lấy lịch sử đơn hàng của cá nhân (theo email hoặc userId)
+// Get user orders
 app.get('/api/orders/user/:email', async (req, res) => {
   try {
     const { email } = req.params;
@@ -178,7 +178,7 @@ app.get('/api/orders/user/:email', async (req, res) => {
   }
 });
 
-// 9.1 Xóa sạch toàn bộ đơn hàng
+// Delete all orders
 app.delete('/api/orders', async (req, res) => {
   try {
     await Order.deleteMany({});
@@ -188,7 +188,7 @@ app.delete('/api/orders', async (req, res) => {
   }
 });
 
-// 9. Cập nhật trạng thái đơn hàng (dành cho Admin)
+// Update order status
 app.patch('/api/orders/:id/status', async (req, res) => {
   try {
     const { orderStatus, paymentStatus } = req.body;
@@ -203,7 +203,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
   }
 });
 
-// Khởi chạy Server
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);

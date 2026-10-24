@@ -23,7 +23,7 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
 
-  // Gọi API từ Backend Node.js
+  // Fetch products from backend
   useEffect(() => {
     fetch('http://localhost:5000/api/products')
       .then((res) => res.json())
@@ -47,7 +47,7 @@ const ProductPage = () => {
     <Box sx={{ py: { xs: 5, md: 7 }, backgroundColor: '#fcfbf9', minHeight: '85vh' }}>
       {/* Thu hẹp bề ngang tổng thể trang web về kích thước tiêu chuẩn lg (1140px) */}
       <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
-        {/* Tiêu đề & Giới thiệu */}
+        {/* Tiêu đề, giới thiệu */}
         <Box sx={{ textAlign: 'center', mb: 4.5 }}>
           <Typography
             variant="overline"
@@ -334,7 +334,7 @@ const ProductPage = () => {
                       </Typography>
                     </Box>
 
-                    {/* Giá & Nút Thêm Giỏ Hàng */}
+                    {/* Giá, nút thêm giỏ hàng */}
                     <Box
                       sx={{
                         display: 'flex',

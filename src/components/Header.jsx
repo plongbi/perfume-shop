@@ -151,7 +151,7 @@ const Header = () => {
               Bộ Sưu Tập
             </Button>
 
-            {/* Nút sang Trang Quản Trị dành riêng cho Admin */}
+            {/* Admin page link */}
             {user && user.role === 'admin' && (
               <Button
                 component={Link}

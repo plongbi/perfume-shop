@@ -53,7 +53,7 @@ const AdminPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // State Dialog thêm sản phẩm
+  // Add product dialog state
   const [openDialog, setOpenDialog] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -71,7 +71,7 @@ const AdminPage = () => {
     role: 'admin'
   };
 
-  // Tải danh sách sản phẩm từ Backend API
+  // Fetch products
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -91,7 +91,7 @@ const AdminPage = () => {
     }
   };
 
-  // Tải danh sách người dùng từ Database MongoDB
+  // Fetch users
   const fetchUsers = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/users');
@@ -104,7 +104,7 @@ const AdminPage = () => {
     }
   };
 
-  // Tải danh sách đơn hàng
+  // Fetch orders
   const fetchOrders = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/orders');
@@ -119,12 +119,12 @@ const AdminPage = () => {
       console.warn('Lỗi fetch orders từ server:', err);
     }
 
-    // Fallback: Lấy từ localStorage
+    // Local storage fallback
     const local = JSON.parse(localStorage.getItem('user_orders') || '[]');
     setOrders(local);
   };
 
-  // Xóa toàn bộ đơn hàng (cả Database lẫn Local)
+  // Clear all orders
   const handleClearAllOrders = async () => {
     try {
       await fetch('http://localhost:5000/api/orders', { method: 'DELETE' });
@@ -135,7 +135,7 @@ const AdminPage = () => {
     setOrders([]);
   };
 
-  // Cập nhật trạng thái đơn hàng
+  // Update order status
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
@@ -148,7 +148,7 @@ const AdminPage = () => {
     }
 
     setOrders(prev => prev.map(o => (o._id === orderId || o.orderCode === orderId) ? { ...o, orderStatus: newStatus } : o));
-    // Cập nhật local
+    // Update local storage
     const local = JSON.parse(localStorage.getItem('user_orders') || '[]');
     const updated = local.map(o => (o._id === orderId || o.orderCode === orderId) ? { ...o, orderStatus: newStatus } : o);
     localStorage.setItem('user_orders', JSON.stringify(updated));
@@ -160,7 +160,7 @@ const AdminPage = () => {
     fetchOrders();
   }, []);
 
-  // Xử lý Thêm Sản Phẩm Mới vào MongoDB
+  // Add product to db
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
@@ -184,7 +184,7 @@ const AdminPage = () => {
     navigate('/login');
   };
 
-  // Render Nội dung tùy thuộc Tab đang chọn
+  // Render tab content
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -202,9 +202,9 @@ const AdminPage = () => {
               </Typography>
             </Box>
 
-            {/* 3 Thẻ chỉ số tổng quan phong cách Clean Modern SaaS */}
+            {/* Overview stat cards */}
             <Grid container spacing={3} sx={{ mb: 4.5 }}>
-              {/* Thẻ 1: Khách hàng & Người dùng */}
+              {/* Users stat */}
               <Grid item xs={12} sm={4}>
                 <Paper
                   elevation={0}
@@ -278,7 +278,7 @@ const AdminPage = () => {
                 </Paper>
               </Grid>
 
-              {/* Thẻ 2: Sản phẩm trong kho */}
+              {/* Products stat */}
               <Grid item xs={12} sm={4}>
                 <Paper
                   elevation={0}
@@ -352,7 +352,7 @@ const AdminPage = () => {
                 </Paper>
               </Grid>
 
-              {/* Thẻ 3: Đơn hàng mới */}
+              {/* Orders stat */}
               <Grid item xs={12} sm={4}>
                 <Paper
                   elevation={0}
@@ -427,7 +427,7 @@ const AdminPage = () => {
               </Grid>
             </Grid>
 
-            {/* Bảng Xem Nhanh Sản Phẩm */}
+            {/* Recent products table */}
             <Paper elevation={0} sx={{ p: 4, borderRadius: '20px', border: '1px solid rgba(0, 0, 0, 0.06)', backgroundColor: '#ffffff', boxShadow: '0 10px 30px rgba(0,0,0,0.02)' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, fontFamily: '"Plus Jakarta Sans", sans-serif', color: '#18181b', fontSize: '1.25rem' }}>
@@ -783,7 +783,7 @@ const AdminPage = () => {
 
   return (
     <Box sx={{ display: 'flex', backgroundColor: '#fcfbf9', minHeight: '100vh' }}>
-      {/* Header Phía Trên */}
+      {/* Top bar */}
       <AppBar
         position="fixed"
         elevation={0}
@@ -811,7 +811,7 @@ const AdminPage = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar Bên Trái */}
+      {/* Sidebar */}
       <Drawer
         sx={{
           width: drawerWidth,
@@ -831,7 +831,7 @@ const AdminPage = () => {
         anchor="left"
       >
         <Box>
-          {/* Logo ESSENCE */}
+          {/* Brand logo */}
           <Box
             onClick={() => navigate('/')}
             sx={{
@@ -881,7 +881,7 @@ const AdminPage = () => {
           </Typography>
 
           <List sx={{ px: 2 }}>
-            {/* Nút Chuyển Nhanh Về Trang Cửa Hàng */}
+            {/* View store button */}
             <ListItem disablePadding sx={{ mb: 1.5 }}>
               <ListItemButton
                 onClick={() => navigate('/')}
@@ -986,7 +986,7 @@ const AdminPage = () => {
           </List>
         </Box>
 
-        {/* Thông tin chân trang Sidebar */}
+        {/* Sidebar footer */}
         <Box sx={{ p: 2.5, borderTop: '1px solid rgba(255, 255, 255, 0.08)', backgroundColor: '#0a0a0a' }}>
           <Typography variant="caption" sx={{ color: '#71717a', display: 'block', fontSize: '0.75rem' }}>Quản trị viên:</Typography>
           <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff', mb: 1.2 }}>{currentUser.name}</Typography>
@@ -1001,12 +1001,12 @@ const AdminPage = () => {
         </Box>
       </Drawer>
 
-      {/* Nội Dung Chính */}
+      {/* Main content */}
       <Box component="main" sx={{ flexGrow: 1, p: 5, mt: 8 }}>
         {renderContent()}
       </Box>
 
-      {/* Popup Dialog Thêm Sản Phẩm Mới */}
+      {/* Add product dialog */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}

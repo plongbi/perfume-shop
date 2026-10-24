@@ -10,7 +10,6 @@ const Footer = () => {
   return (
     <Box sx={{ backgroundColor: '#111111', color: '#e4e4e7', pt: { xs: 8, md: 10 }, pb: 5, mt: 'auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
       <Container maxWidth="lg">
-        {/* Phần đăng ký nhận bản tin VIP - Tối giản & Tinh tế */}
         <Box
           sx={{
             backgroundColor: '#18181b',
@@ -77,9 +76,8 @@ const Footer = () => {
           </Box>
         </Box>
 
-        {/* Các cột thông tin chi tiết */}
         <Grid container spacing={5} sx={{ mb: 7 }}>
-          {/* Cột 1: Thương hiệu */}
+          {/* Brand info */}
           <Grid item xs={12} md={4}>
             <Typography
               variant="h6"
@@ -112,7 +110,7 @@ const Footer = () => {
             </Box>
           </Grid>
 
-          {/* Cột 2: Khám Phá */}
+          {/* Collections links */}
           <Grid item xs={6} md={2}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2.5, color: '#ffffff', fontSize: '0.88rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Bộ Sưu Tập
@@ -125,7 +123,7 @@ const Footer = () => {
             </Box>
           </Grid>
 
-          {/* Cột 3: Hỗ Trợ Khách Hàng */}
+          {/* Customer support links */}
           <Grid item xs={6} md={2}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2.5, color: '#ffffff', fontSize: '0.88rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Dịch Vụ
@@ -138,7 +136,7 @@ const Footer = () => {
             </Box>
           </Grid>
 
-          {/* Cột 4: Showroom & Liên Hệ */}
+          {/* Showroom & contact info */}
           <Grid item xs={12} md={4}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2.5, color: '#ffffff', fontSize: '0.88rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Showroom & Liên Hệ
@@ -157,7 +155,7 @@ const Footer = () => {
 
         <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mb: 4 }} />
 
-        {/* Bản quyền & Điều khoản */}
+        {/* Copyright & terms */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', color: '#71717a', fontSize: '0.82rem', gap: 1.5 }}>
           <Typography variant="body2" sx={{ fontWeight: 300, fontSize: '0.82rem' }}>
             © 2026 ESSENCE Perfume Boutique. All rights reserved.

@@ -23,7 +23,7 @@ const VNPayPaymentPage = () => {
   const location = useLocation();
   const { clearCart } = useCart();
 
-  // Nhận thông tin đơn hàng truyền qua router state hoặc fallback
+  // Order data from router state or fallback
   const orderData = location.state || {
     recipientName: 'Quý khách',
     address: 'Địa chỉ nhận hàng',
@@ -69,7 +69,7 @@ const VNPayPaymentPage = () => {
       console.error('Lỗi lưu đơn hàng VNPay:', e);
     }
 
-    // Sao lưu vào localStorage 'user_orders'
+    // Save order to local storage fallback
     try {
       const localOrders = JSON.parse(localStorage.getItem('user_orders') || '[]');
       const fallbackOrder = savedOrderRecord || {
@@ -89,7 +89,7 @@ const VNPayPaymentPage = () => {
     if (methodId === 'vnpay_qr' || methodId === 'vnpay_app') {
       setShowQRModal(true);
     } else {
-      // Giả lập xử lý thanh toán test thành công
+      // Simulate payment processing
       setProcessing(true);
       setTimeout(() => {
         setProcessing(false);
@@ -228,7 +228,7 @@ const VNPayPaymentPage = () => {
             </Box>
           ) : (
             <>
-              {/* Header Logos: SACOMBANK & VNPAY */}
+              {/* Header logos: Sacombank, VNPay */}
               <Box
                 sx={{
                   display: 'flex',

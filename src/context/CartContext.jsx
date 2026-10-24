@@ -11,11 +11,9 @@ export const CartProvider = ({ children }) => {
     } catch (e) {
       console.error('Error loading cart from localStorage', e);
     }
-    // Giỏ hàng bắt đầu trống nếu chưa có trong localStorage
     return [];
   });
 
-  // Tự động lưu vào localStorage mỗi khi giỏ thay đổi
   useEffect(() => {
     try {
       localStorage.setItem('perfume_cart', JSON.stringify(cart));
@@ -24,7 +22,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart]);
 
-  // Hàm chuyển đổi chuỗi giá thành số nguyên (VD: "3.850.000₫" -> 3850000)
+  // Convert 3.850.000₫ -> 3850000
   const parsePrice = (priceStr) => {
     if (typeof priceStr === 'number') return priceStr;
     if (!priceStr) return 0;
@@ -32,11 +30,10 @@ export const CartProvider = ({ children }) => {
     return parseInt(cleanStr, 10) || 0;
   };
 
-  // Thêm sản phẩm vào giỏ (hỗ trợ số lượng tùy chọn quantityToAdd, có debounce chống double-click / StrictMode duplicate)
+  // Add to cart
   const addToCart = (product, quantityToAdd = 1) => {
     const now = Date.now();
     const itemKey = product._id || product.id || product.name;
-    // Chặn nếu cùng 1 sản phẩm bị gọi liên tiếp trong vòng 400ms
     if (
       lastAddCallRef.current.id === itemKey &&
       now - lastAddCallRef.current.time < 400
@@ -69,7 +66,7 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  // Cập nhật số lượng
+  // Update item quantity
   const updateQuantity = (productId, delta) => {
     setCart((prevCart) =>
       prevCart
@@ -84,20 +81,20 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // Xóa sản phẩm khỏi giỏ
+  // Remove item from cart
   const removeFromCart = (productId) => {
     setCart((prevCart) => prevCart.filter((item) => item._id !== productId && item.name !== productId));
   };
 
-  // Xóa sạch giỏ hàng
+  // Clear cart
   const clearCart = () => {
     setCart([]);
   };
 
-  // Tổng số lượng món hàng trong giỏ
+  // Total cart items
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Tổng tiền trước giảm giá
+  // Subtotal before discounts
   const subtotal = cart.reduce((sum, item) => {
     const unitPrice = item.rawPrice || parsePrice(item.price);
     return sum + unitPrice * item.quantity;

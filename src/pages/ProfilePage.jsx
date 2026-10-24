@@ -32,17 +32,17 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Tab: 'profile' (Chỉnh sửa hồ sơ) hoặc 'orders' (Lịch sử đơn hàng)
+  // Active tab: 'profile' or 'orders'
   const [activeTab, setActiveTab] = useState(location.state?.tab || 'orders');
 
-  // Lấy dữ liệu user từ localStorage nếu có, nếu chưa có tạo tài khoản mặc định
+  // Load user from local storage
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user');
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch (e) {
-        // do nothing
+        // Fallback
       }
     }
     return {
@@ -62,11 +62,11 @@ const ProfilePage = () => {
   );
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Danh sách đơn hàng của người dùng
+  // User orders state
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
-  // Lấy lịch sử đơn hàng từ Backend API MongoDB Atlas và LocalStorage
+  // Fetch user orders from api and local storage
   const fetchMyOrders = async () => {
     setLoadingOrders(true);
     const email = user.email || 'guest@gmail.com';
@@ -84,7 +84,7 @@ const ProfilePage = () => {
       console.warn('Lỗi fetch đơn hàng từ server:', e);
     }
 
-    // Đọc thêm các đơn hàng vừa đặt lưu trong localStorage
+    // Read orders from local storage
     let localOrders = [];
     try {
       localOrders = JSON.parse(localStorage.getItem('user_orders') || '[]');
@@ -92,7 +92,7 @@ const ProfilePage = () => {
       localOrders = [];
     }
 
-    // Kết hợp và lọc bỏ đơn trùng mã orderCode / _id
+    // Merge and deduplicate orders
     const mergedMap = new Map();
     serverOrders.forEach(ord => {
       const key = ord.orderCode || ord._id;
@@ -117,7 +117,7 @@ const ProfilePage = () => {
     fetchMyOrders();
   }, [user.email]);
 
-  // Xử lý đổi ảnh đại diện (chọn file từ máy tính)
+  // Handle avatar file upload
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -129,7 +129,7 @@ const ProfilePage = () => {
     }
   };
 
-  // Lưu thông tin thay đổi vào localStorage
+  // Save profile to local storage
   const handleSave = (e) => {
     e.preventDefault();
     const updatedUser = {
@@ -289,7 +289,7 @@ const ProfilePage = () => {
             )}
 
             <Grid container spacing={{ xs: 4, md: 6 }}>
-              {/* Cột Trái: Ảnh đại diện & Tên hiển thị & Nút Đổi ảnh đại diện */}
+              {/* Cột trái: ảnh đại diện, tên hiển thị, nút đổi ảnh */}
               <Grid
                 item
                 xs={12}
@@ -317,7 +317,7 @@ const ProfilePage = () => {
                   />
                 </Box>
 
-                {/* Tên & Email hiển thị bên trái */}
+                {/* Tên, email hiển thị bên trái */}
                 <Typography
                   variant="h6"
                   sx={{

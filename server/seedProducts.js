@@ -6,7 +6,7 @@ const Product = require('./models/Product');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const sampleProducts = [
-  // --- NHÓM 1: EAU DE PARFUM (EDP) ---
+  // EAU DE PARFUM
   {
     name: 'Lost Cherry - Tom Ford',
     category: 'Eau de Parfum',
@@ -139,7 +139,7 @@ const sampleProducts = [
     description: 'Gỗ đàn hương êm dịu hòa cùng sữa quả sung và xạ hương trắng tinh khiết.'
   },
 
-  // --- NHÓM 2: EXTRAIT DE PARFUM (NỒNG ĐỘ CAO CẤP NHẤT) ---
+  // EXTRAIT DE PARFUM
   {
     name: 'Baccarat Rouge 540 Extrait - MFK',
     category: 'Extrait de Parfum',
@@ -237,7 +237,7 @@ const sampleProducts = [
     description: 'Hạnh nhân đắng kết hợp gỗ trầm và tiêu hồng tạo nên khí chất vương tộc.'
   },
 
-  // --- NHÓM 3: EAU DE TOILETTE (EDT) ---
+  // EAU DE TOILETTE
   {
     name: 'Bleu de Chanel EDT',
     category: 'Eau de Toilette',
@@ -343,7 +343,7 @@ const sampleProducts = [
     description: 'Hương chanh vàng Capri rạng rỡ và táo xanh giòn tan mang hương vị mùa hè bất tận.'
   },
 
-  // --- NHÓM 4: EAU DE COLOGNE & COLOGNE (EDC) ---
+  // EAU DE COLOGNE & COLOGNE
   {
     name: 'Wood Sage & Sea Salt - Jo Malone',
     category: 'Eau de Cologne',
@@ -432,7 +432,7 @@ async function seedDatabase() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB!');
 
-    // Xóa sản phẩm cũ hoặc bổ sung
+    // Reset products
     console.log('Clearing existing products...');
     await Product.deleteMany({});
 

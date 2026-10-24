@@ -39,10 +39,10 @@ const CartPage = () => {
   const [promoApplied, setPromoApplied] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
 
-  // Bước hiển thị: 'cart' hoặc 'checkout'
+  // Step state: 'cart' or 'checkout'
   const [step, setStep] = useState('cart');
 
-  // Thông tin người nhận - tự động điền nếu người dùng đã đăng nhập / có lưu thông tin
+  // Recipient form data
   const savedUserData = (() => {
     try {
       return JSON.parse(localStorage.getItem('user')) || {};
@@ -56,10 +56,10 @@ const CartPage = () => {
   const [recipientPhone, setRecipientPhone] = useState(savedUserData.phone || '');
   const [formError, setFormError] = useState('');
 
-  // Phương thức thanh toán: 'cod' hoặc 'vnpay'
+  // Payment method: 'cod' or 'vnpay'
   const [paymentMethod, setPaymentMethod] = useState('cod');
 
-  // Phí ship: Miễn phí nếu trên 2 triệu
+  // Shipping fee calculation
   const shippingFee = subtotal > 2000000 || subtotal === 0 ? 0 : 40000;
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const finalTotal = subtotal - discountAmount + shippingFee;
@@ -115,7 +115,7 @@ const CartPage = () => {
     };
 
     if (paymentMethod === 'vnpay') {
-      // Điều hướng sang trang chọn phương thức thanh toán VNPay kèm toàn bộ dữ liệu đơn hàng
+      // Redirect to VNPay payment page
       navigate('/payment/vnpay', {
         state: {
           ...orderPayload,
@@ -124,7 +124,7 @@ const CartPage = () => {
         }
       });
     } else {
-      // Thanh toán khi nhận hàng (COD) -> Lưu trực tiếp vào MongoDB Atlas & đồng bộ LocalStorage backup
+      // Handle COD order
       let savedOrderRecord = null;
       try {
         const res = await fetch('http://localhost:5000/api/orders', {
@@ -139,7 +139,7 @@ const CartPage = () => {
         console.error('Lỗi lưu đơn hàng:', err);
       }
 
-      // Lưu fallback vào localStorage 'user_orders' để hiển thị ngay lập tức trong lịch sử
+      // Save order to local storage fallback
       try {
         const localOrders = JSON.parse(localStorage.getItem('user_orders') || '[]');
         const fallbackOrder = savedOrderRecord || {
